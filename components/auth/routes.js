@@ -1,6 +1,7 @@
-const Router = require('express')
+import Router from 'express'
+import controller from './controller.js'
+
 const router = new Router()
-const controller = require('./controller')
 
 router.post('/registrationUser', controller.registrationUser)
 
@@ -9,4 +10,4 @@ router.post('/refreshToken', controller.refreshToken)
 router.post('/loginUser', controller.loginUser)
 router.post('/logout', controller.logout)
 
-module.exports = router
+export default router

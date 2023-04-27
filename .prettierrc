@@ -5,5 +5,7 @@
   "arrowParens": "avoid",
   "tabWidth": 2,
   "useTabs": false,
-  "bracketSameLine": true
+  "bracketSameLine": true,
+  "printWidth": 80,
+  "endOfLine": "lf"
 }
