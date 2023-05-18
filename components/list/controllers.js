@@ -1,7 +1,4 @@
-import * as dotenv from 'dotenv'
 import services from './services.js'
-
-dotenv.config()
 
 class Controllers {
   async getCategories(req, res) {
@@ -15,9 +12,19 @@ class Controllers {
   }
 
   async getTools(req, res) {
-    const { region, jobBoard } = req.query
-    const tools = await services.getTools(region, jobBoard)
+    const { region, jobBoard, dateId } = req.query
+    const tools = await services.getTools(region, jobBoard, dateId)
     res.json(tools)
+  }
+
+  async getCountOfCurrentItem(req, res) {
+    const { idTool, region, jobBoard } = req.query
+    const counts = await services.getCountOfCurrentItem(
+      idTool,
+      region,
+      jobBoard
+    )
+    res.json(counts)
   }
 }
 

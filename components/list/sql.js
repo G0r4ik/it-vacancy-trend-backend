@@ -1,9 +1,4 @@
-import pool from '../../config/database.js'
-
-async function pQuery(query, args) {
-  const resp = await pool.query(query, args)
-  return resp.rows
-}
+import { pQuery } from '../../config/database.js'
 
 class Queries {
   getTools() {
@@ -27,6 +22,13 @@ class Queries {
     return pQuery(
       `SELECT * FROM count_of_items WHERE region = $1 AND job_board = $2`,
       [region, jobBoard]
+    )
+  }
+
+  getCountOfCurrentItem(itemId) {
+    return pQuery(
+      'SELECT date_of_completion,count_of_item FROM count_of_items WHERE id_tool = $1 ORDER BY date_of_completion',
+      [itemId]
     )
   }
 
@@ -60,7 +62,7 @@ class Queries {
 
   getLastDate() {
     return pQuery(
-      'SELECT id_date FROM date_of_completion ORDER BY id_date DESC LIMIT 1'
+      'SELECT * FROM date_of_completion ORDER BY id_date DESC LIMIT 1'
     )
   }
 

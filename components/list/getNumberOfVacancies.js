@@ -1,8 +1,24 @@
 import chalk from 'chalk'
-import needle from 'needle'
 
 import { getCurrentDate } from './helprers.js'
 import queries from './sql.js'
+import { HOURS_OF_START_PARSING } from '../../shared/consts.js'
+
+function isSameDay(date, now) {
+  const isDay = date.getDay() === now.getDay()
+  const isMonth = date.getMonth() === now.getMonth()
+  const isYear = date.getFullYear() === now.getFullYear()
+  return isDay && isMonth && isYear
+}
+
+export async function canParsing() {
+  const now = new Date()
+  if (now.getHours() === HOURS_OF_START_PARSING) {
+    const [lastDate] = await queries.getLastDate()
+    return !isSameDay(new Date(lastDate.date_of_completion), now)
+  }
+  return false
+}
 
 function isFixedOrNotFound(findString) {
   const fixed = findString.includes('исправлен')
@@ -11,10 +27,13 @@ function isFixedOrNotFound(findString) {
 }
 
 async function getString(findTool) {
-  const url = `https://hh.ru/search/vacancy?no_magic=true&area=113&&items_on_page=1&text=${findTool}`
-  const resp = await needle('get', url)
-  const indexOfStart = resp.body.indexOf('bloko-header-3')
-  const findString = resp.body.slice(indexOfStart + 45, indexOfStart + 300)
+  const a = await fetch(
+    `https://spb.hh.ru/search/vacancy?no_magic=true&area=113&items_on_page=1&text=${findTool}`
+  )
+  const resp = await a.text()
+
+  const indexOfStart = resp.indexOf('bloko-header-3')
+  const findString = resp.slice(indexOfStart + 45, indexOfStart + 300)
 
   if (!findString.includes('аканс') && !isFixedOrNotFound(findString)) {
     return getString(findTool)
@@ -25,7 +44,6 @@ async function getString(findTool) {
 async function getCountInPage(tool) {
   const findTool = encodeURIComponent(tool.name_tool)
   const findString = await getString(findTool)
-  // console.log(chalk.dim(findString))
 
   if (isFixedOrNotFound(findString)) return 0
 
@@ -50,7 +68,7 @@ async function setAndLogItems(tool, idDate) {
   await queries.setCountsItem(tool.id_tool, idDate, countVacancy)
 }
 
-export default async function getNumberOfVacancies() {
+export async function getNumberOfVacancies() {
   console.log(chalk.bgYellow('Start getNumberOfVacancies'))
   const dateStart = new Date()
   const idDate = await createAndGetDateOfNewSearch()

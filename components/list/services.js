@@ -13,35 +13,40 @@ class Services {
   async getHashTools() {
     const tools = await queries.getTools()
     const hashTools = {}
-    for (const tool of tools) {
-      hashTools[tool.id_tool] = tool
-    }
+    for (const tool of tools) hashTools[tool.id_tool] = tool
     return hashTools
   }
 
+  getCountOfCurrentItem(itemId) {
+    return queries.getCountOfCurrentItem(itemId)
+  }
+
   // eslint-disable-next-line max-statements
-  async getTools(region, jobBoard) {
+  async getTools(region, jobBoard, dateId) {
     const hashCategories = await this.getHashCategories()
     const hashTools = await this.getHashTools()
+
     const lastDate = await queries.getLastTrueDate()
-    const tools2 = await queries.getNumberOfAllTechnology(
+    const lastDateId = dateId || lastDate[0].id_date
+
+    const tools = await queries.getNumberOfAllTechnology(
       region,
       jobBoard,
-      lastDate[0].id_date
+      lastDateId
     )
 
-    for (const tool2 of tools2) {
-      hashTools[tool2.id_tool] = { ...hashTools[tool2.id_tool], ...tool2 }
-      const hashItem = hashTools[tool2.id_tool]
-      if (!hashItem.counts) hashItem.counts = { [jobBoard]: {} }
-      const dateOfCompleation = hashItem.date_of_completion
-      hashItem.counts[jobBoard][dateOfCompleation] = hashItem.count_of_item
-      hashItem.category = hashCategories[hashItem.id_category]
-      delete hashItem.id_category
+    const result = []
+    for (const tool of tools) {
+      const item = { ...hashTools[tool.id_tool], ...tool }
+      item.counts = { [jobBoard]: {} }
+      item.counts[jobBoard][item.date_of_completion] = item.count_of_item
+      item.category = hashCategories[item.id_category]
+      delete item.id_category
+      delete item.count_of_item
+      result.push(item)
     }
 
-    const countOfTool = Object.values(hashTools)
-    return countOfTool.sort((a, b) => b.count_of_item - a.count_of_item)
+    return result.sort((a, b) => b.count_of_item - a.count_of_item)
   }
 
   getDates() {
