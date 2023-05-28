@@ -46,7 +46,11 @@ class Services {
       result.push(item)
     }
 
-    return result.sort((a, b) => b.count_of_item - a.count_of_item)
+    return result.sort(
+      (a, b) =>
+        b.counts[jobBoard][b.date_of_completion] -
+        a.counts[jobBoard][a.date_of_completion]
+    )
   }
 
   getDates() {
