@@ -1,6 +1,17 @@
 import { pQuery } from '../../config/database.js'
 
 class Queries {
+  aaa() {
+    return pQuery('SELECT * FROM categories_tools')
+  }
+
+  aaa2(id_tool, id_category) {
+    return pQuery(
+      'INSERT INTO categories_tools (id_tool, id_category) VALUES ($1, $2)',
+      [id_tool, id_category]
+    )
+  }
+
   getTools() {
     return pQuery('SELECT * FROM tools')
   }

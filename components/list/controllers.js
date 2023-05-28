@@ -26,6 +26,13 @@ class Controllers {
     )
     res.json(counts)
   }
+
+  async getAAA(req, res) {
+    const { idTool, idCategory } = req.query
+    console.log(idTool, idCategory)
+    // await services.aaaa2(idTool, idCategory)
+    // res.end(1)
+  }
 }
 
 export default new Controllers()

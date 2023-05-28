@@ -3,3 +3,8 @@ dist
 .vscode
 .env
 t.md
+
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
