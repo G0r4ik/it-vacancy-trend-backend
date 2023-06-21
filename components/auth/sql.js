@@ -1,3 +1,5 @@
+import { pQuery } from '../../config/database.js'
+
 class Queries {
   async getUserByEmail(email) {
     const user = await pQuery(
@@ -60,3 +62,5 @@ class Queries {
     return pQuery('UPDATE auth SET refresh_token = $1', refreshToken)
   }
 }
+
+export default new Queries()

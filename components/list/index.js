@@ -1,7 +1,2 @@
-import { getNumberOfVacancies, canParsing } from './getNumberOfVacancies.js'
-import listRouter from './routes.js'
-import queries from './sql.js'
-
-const { getLastDate } = queries
-
-export { getNumberOfVacancies, listRouter, getLastDate, canParsing }
+export { getNumberOfVacancies, canParsing } from './getNumberOfVacancies.js'
+export { default as listRouter } from './routes.js'

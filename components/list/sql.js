@@ -1,19 +1,12 @@
 import { pQuery } from '../../config/database.js'
 
 class Queries {
-  aaa() {
-    return pQuery('SELECT * FROM categories_tools')
-  }
-
-  aaa2(id_tool, id_category) {
-    return pQuery(
-      'INSERT INTO categories_tools (id_tool, id_category) VALUES ($1, $2)',
-      [id_tool, id_category]
-    )
-  }
-
   getTools() {
     return pQuery('SELECT * FROM tools')
+  }
+
+  getCategoriesTools() {
+    return pQuery('SELECT * FROM categories_tools')
   }
 
   getCategories() {
@@ -22,7 +15,7 @@ class Queries {
 
   // Count
 
-  getNumberOfAllTechnology(region, jobBoard, date) {
+  getOneCountOfAllTechnology(region, jobBoard, date) {
     return pQuery(
       `SELECT * FROM count_of_items WHERE region = $1 AND job_board = $2 AND date_of_completion = $3`,
       [region, jobBoard, date]
@@ -38,11 +31,18 @@ class Queries {
 
   getCountOfCurrentItem(itemId) {
     return pQuery(
-      'SELECT date_of_completion,count_of_item FROM count_of_items WHERE id_tool = $1 ORDER BY date_of_completion',
+      `
+        SELECT count_of_items.date_of_completion, count_of_items.count_of_item
+        FROM count_of_items
+        JOIN date_of_completion ON count_of_items.date_of_completion = date_of_completion.id_date
+        WHERE date_of_completion.is_all_found = true AND count_of_items.id_tool = $1
+        ORDER BY count_of_items.date_of_completion;
+`,
       [itemId]
     )
   }
 
+  // FIX хардкод HH
   setCountsItem(id_tool, lastDateId, countVacancy) {
     return pQuery(
       `INSERT INTO count_of_items(region,job_board,id_tool,date_of_completion,count_of_item) VALUES('Russia','HeadHunter',$1,$2,$3)`,
@@ -65,21 +65,15 @@ class Queries {
     )
   }
 
-  getLastTrueDate() {
-    return pQuery(
-      'SELECT id_date FROM date_of_completion WHERE is_all_found = TRUE ORDER BY id_date DESC LIMIT 1'
-    )
-  }
-
   getLastDate() {
     return pQuery(
-      'SELECT * FROM date_of_completion ORDER BY id_date DESC LIMIT 1'
+      'SELECT * FROM date_of_completion WHERE is_all_found = TRUE ORDER BY id_date DESC LIMIT 1'
     )
   }
 
   createNewDate(date) {
     return pQuery(
-      'INSERT INTO date_of_completion(date_of_completion) VALUES($1)',
+      'INSERT INTO date_of_completion(date_of_completion) VALUES($1) RETURNING id_date',
       [date]
     )
   }

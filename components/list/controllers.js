@@ -12,26 +12,16 @@ class Controllers {
   }
 
   async getTools(req, res) {
-    const { region, jobBoard, dateId } = req.query
-    const tools = await services.getTools(region, jobBoard, dateId)
+    const { region, jobBoard } = req.query
+    const tools = await services.getTools(region, jobBoard)
     res.json(tools)
   }
 
   async getCountOfCurrentItem(req, res) {
     const { idTool, region, jobBoard } = req.query
-    const counts = await services.getCountOfCurrentItem(
-      idTool,
-      region,
-      jobBoard
-    )
+    const options = [idTool, region, jobBoard]
+    const counts = await services.getCountOfCurrentItem(...options)
     res.json(counts)
-  }
-
-  async getAAA(req, res) {
-    const { idTool, idCategory } = req.query
-    console.log(idTool, idCategory)
-    // await services.aaaa2(idTool, idCategory)
-    // res.end(1)
   }
 }
 

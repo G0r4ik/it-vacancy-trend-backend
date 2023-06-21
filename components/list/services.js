@@ -1,6 +1,50 @@
 import queries from './sql.js'
 
 class Services {
+  getDates() {
+    return queries.getDates()
+  }
+
+  async getCategories() {
+    return queries.getCategories()
+  }
+
+  async getTools(region, jobBoard) {
+    const hashCategories = await this.getHashCategories()
+    const [lastDate] = await queries.getLastDate()
+    const lastDateId = lastDate.id_date
+
+    const options = [region, jobBoard, lastDateId]
+    const counts = await queries.getOneCountOfAllTechnology(...options)
+
+    const allTools = await queries.getTools()
+    const categoriesOfTools = await queries.getCategoriesTools()
+    // NOTE работает медленее на 50мс
+    // const hashTools = await this.getHashCounts(region, jobBoard, lastDateId)
+
+    for (const tool of allTools) {
+      tool.region = region
+      tool.jobBoard = jobBoard
+
+      const categories = categoriesOfTools.filter(
+        i => i.id_tool === tool.id_tool
+      )
+      for (const category of categories) {
+        if (!tool.categories) tool.categories = []
+        tool.categories.push(hashCategories[category.id_category])
+      }
+
+      const count = counts.find(
+        item => item.id_tool === tool.id_tool
+      ).count_of_item
+      tool.counts = { [jobBoard]: { [lastDateId]: count } }
+    }
+
+    return allTools.sort(
+      (a, b) => b.counts[jobBoard][lastDateId] - a.counts[jobBoard][lastDateId]
+    )
+  }
+
   async getHashCategories() {
     const categories = await queries.getCategories()
     const hashCategories = {}
@@ -17,89 +61,19 @@ class Services {
     return hashTools
   }
 
-  getCountOfCurrentItem(itemId) {
-    return queries.getCountOfCurrentItem(itemId)
-  }
-
-  // eslint-disable-next-line max-statements
-  async getTools(region, jobBoard, dateId) {
-    const hashCategories = await this.getHashCategories()
-    const hashTools = await this.getHashTools()
-
-    const lastDate = await queries.getLastTrueDate()
-    const lastDateId = dateId || lastDate[0].id_date
-
-    const tools = await queries.getNumberOfAllTechnology(
+  async getHashCounts(region, jobBoard, date) {
+    const tools = await queries.getOneCountOfAllTechnology(
       region,
       jobBoard,
-      lastDateId
+      date
     )
-    const b = await queries.aaa()
-    const res = {}
-    for (const item of b) {
-      item.name = hashTools[item.id_tool].name_tool
-      if (res[item.id_tool]) {
-        res[item.id_tool].names.push({
-          id_category: item.id_category,
-          name_category: hashCategories[item.id_category].name_category,
-        })
-      } else {
-        item.names = []
-        item.names.push({
-          id_category: item.id_category,
-          name_category: hashCategories[item.id_category].name_category,
-        })
-        res[item.id_tool] = { ...item }
-      }
-    }
-
-    const result = []
-    for (const tool of tools) {
-      const item = { ...hashTools[tool.id_tool], ...tool }
-      item.counts = { [jobBoard]: {} }
-      item.counts[jobBoard][item.date_of_completion] = item.count_of_item
-      item.category = hashCategories[item.id_category]
-      item.categories = res[item.id_tool]?.names
-      delete item.id_category
-      delete item.count_of_item
-      result.push(item)
-    }
-
-    return result.sort(
-      (a, b) =>
-        b.counts[jobBoard][b.date_of_completion] -
-        a.counts[jobBoard][a.date_of_completion]
-    )
+    const hashTools = {}
+    for (const tool of tools) hashTools[tool.id_tool] = tool
+    return hashTools
   }
 
-  getDates() {
-    return queries.getDates()
-  }
-
-  getCategories() {
-    return queries.getCategories()
-  }
-
-  // eslint-disable-next-line max-statements
-  async aaaa2(tech, category) {
-    // const cat = await this.getHashCategories()
-    // const too = await this.getHashTools()
-    // const b = await queries.aaa()
-    // const res = {}
-    // for (const item of b) {
-    //   // if (!item.names) item.names = []
-    //   // item.names.push(cat[item.id_category].name_category)
-    //   item.name = too[item.id_tool].name_tool
-    //   if (res[item.id_tool]) {
-    //     res[item.id_tool].names.push(cat[item.id_category].name_category)
-    //   } else {
-    //     item.names = []
-    //     item.names.push(cat[item.id_category].name_category)
-    //     res[item.id_tool] = { ...item }
-    //   }
-    // }
-    // return res
-    await queries.aaa2(tech, category)
+  getCountOfCurrentItem(itemId) {
+    return queries.getCountOfCurrentItem(itemId)
   }
 }
 

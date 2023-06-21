@@ -2,15 +2,13 @@
   "type": "module",
   "main": "index.js",
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=14.0.0"
   },
   "scripts": {
-    "lint-js": "eslint **/**/*.js --fix",
+    "lint-js": "eslint **/**/*.js",
     "start-build": "cross-env NODE_ENV=production nodemon ./index.js",
     "start-local": "cross-env NODE_ENV=development nodemon ./index.js"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.0",
