@@ -54,6 +54,7 @@ class Services {
     return hashCategories
   }
 
+  // Вроде бы невыгодно использовать
   async getHashTools() {
     const tools = await queries.getTools()
     const hashTools = {}

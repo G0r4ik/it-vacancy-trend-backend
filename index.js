@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import compression from 'compression'
 import express from 'express'
 import routes from './config/router.js'
 import { getNumberOfVacancies, canParsing } from './components/list/index.js'
@@ -13,6 +14,7 @@ import {
 dotenv.config()
 
 const app = express()
+app.use(compression({ level: 1 }))
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({ credentials: true, origin: [CLIENT_ADDRESS] }))
