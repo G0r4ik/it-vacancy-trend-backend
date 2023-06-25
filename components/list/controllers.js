@@ -12,8 +12,8 @@ class Controllers {
   }
 
   async getTools(req, res) {
-    const { region, jobBoard } = req.query
-    const tools = await services.getTools(region, jobBoard)
+    const { region, jobBoard, dateId } = req.query
+    const tools = await services.getTools(region, jobBoard, dateId)
     res.json(tools)
   }
 
