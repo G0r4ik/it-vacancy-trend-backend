@@ -21,7 +21,12 @@ const app = express()
 app.use(compression({ level: 1 }))
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors({ credentials: true, origin: [CLIENT_ADDRESS] }))
+app.use(
+  cors({
+    credentials: true,
+    origin: [CLIENT_ADDRESS, process.env.CLIENT_ADDRESS_TEST],
+  })
+)
 for (const router of Object.values(routes)) app.use(router)
 app.use(errorHandler)
 
