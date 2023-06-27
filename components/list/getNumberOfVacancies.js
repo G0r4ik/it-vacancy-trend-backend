@@ -27,7 +27,6 @@ export async function getNumberOfVacancies() {
     if (!isNormalCount(currentCount, previousCount)) {
       console.log('Сильно отличающиеся числа')
       sendMail({
-        to: 'egorgorlushkin0@gmail.com',
         subject: 'Отличающиеся данные',
         text: `Слишком отличающиеся числа у ${tool.name_tool}: прошлое: ${previousCount} текущее: ${currentCount}`,
       })
@@ -50,9 +49,9 @@ async function createAndGetDateOfNewParsing() {
 // FIX Add API HH
 async function getCountOfItem(tool, i = 0) {
   if (i === NUMBER_OF_FAILED_ATTEMPTS) {
+    console.log(`Слишком много неудачных запросов (${tool.name_tool})`)
     sendMail({
-      to: 'egorgorlushkin0@gmail.com',
-      subject: `Было несколько попыток, не увенчавшихся успеххов (${tool.name_tool})`,
+      subject: `Слишком много неудачных запросов (${tool.name_tool})`,
     })
     return null
   }

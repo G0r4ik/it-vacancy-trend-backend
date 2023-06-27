@@ -33,7 +33,6 @@ class Services {
         if (!tool.categories) tool.categories = []
         tool.categories.push(hashCategories[category.id_category])
       }
-      console.log(tool.name_tool)
       const count =
         counts.find(item => item.id_tool === tool.id_tool)?.count_of_item ||
         null
@@ -73,8 +72,17 @@ class Services {
     return hashTools
   }
 
-  getCountOfCurrentItem(itemId) {
-    return queries.getCountOfCurrentItem(itemId)
+  async getCountOfCurrentItem(itemId) {
+    const counts = await queries.getCountOfCurrentItem(itemId)
+    const dates = await queries.getDates()
+    const fixedLength = counts.length
+    for (let i = 0; i < dates.length - fixedLength; i++) {
+      counts.unshift({
+        date_of_completion: dates[i].id_date,
+        count_of_item: null,
+      })
+    }
+    return counts
   }
 }
 

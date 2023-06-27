@@ -9,4 +9,5 @@ export const transporter = nodemailer.createTransport({
   },
 })
 
-export const sendMail = object => transporter.sendMail(object)
+export const sendMail = object =>
+  transporter.sendMail({ ...object, to: process.env.EMAIL_TO_SEND_TO })

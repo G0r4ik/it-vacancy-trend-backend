@@ -18,10 +18,12 @@
     "no-plusplus": "off",
     "unicorn/no-null": "off",
     "import/extensions": "off",
+    "default-param-last": "off",
     "no-restricted-syntax": "off", // !
     "unicorn/filename-case": "off",
     "unicorn/no-empty-file": "off",
     "class-methods-use-this": "off", // !
+    "import/prefer-default-export": "off",
     "import/no-extraneous-dependencies": "off",
     "unicorn/prevent-abbreviations": [
       "error",
