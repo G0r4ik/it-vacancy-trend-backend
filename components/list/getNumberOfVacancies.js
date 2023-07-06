@@ -56,7 +56,7 @@ async function getCountOfItem(tool, i = 0) {
     return null
   }
 
-  const encodedTool = encodeURIComponent(tool.name_tool)
+  const encodedTool = encodeURIComponent(tool.search_query)
   const resp = await fetch(`${HH_QUERY_SEARCH}${encodedTool}`)
   const html = await resp.text()
 
@@ -85,7 +85,8 @@ function isFixedOrNotFound(parsedString) {
 function isNormalCount(currentCount, previousCount) {
   const maxValue = Math.max(currentCount, previousCount)
   const minValue = Math.min(currentCount, previousCount)
-  const c = maxValue > MIN_VALUE_CHECKING_DIFFERENCES && maxValue / 2 < minValue
+
+  const c = maxValue / 2 < minValue
   return maxValue < MIN_VALUE_CHECKING_DIFFERENCES || c
 }
 

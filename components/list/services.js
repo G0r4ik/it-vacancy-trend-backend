@@ -26,9 +26,9 @@ class Services {
       tool.region = region
       tool.jobBoard = jobBoard
 
-      const categories = categoriesOfTools.filter(
-        i => i.id_tool === tool.id_tool
-      )
+      const categories = categoriesOfTools
+        .filter(i => i.id_tool === tool.id_tool)
+        .sort((a, b) => a.name_category - b.name_category)
       for (const category of categories) {
         if (!tool.categories) tool.categories = []
         tool.categories.push(hashCategories[category.id_category])
