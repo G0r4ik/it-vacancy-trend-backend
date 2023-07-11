@@ -37,7 +37,7 @@ class Queries {
         JOIN date_of_completion ON count_of_items.date_of_completion = date_of_completion.id_date
         WHERE date_of_completion.is_all_found = true AND count_of_items.id_tool = $1
         ORDER BY count_of_items.date_of_completion;
-`,
+      `,
       [itemId]
     )
   }
