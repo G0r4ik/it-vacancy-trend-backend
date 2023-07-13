@@ -1,74 +1,58 @@
-// import chalk from 'chalk'
-// import { CLIENT_ADDRESS } from '../../shared/consts.js'
+import UserService from './service.js'
+import { CLIENT_ADDRESS, MAX_AGE_COOKIE } from '../../shared/consts.js'
+import { checkParameters } from '../../shared/helpers.js'
+import { validationResult } from 'express-validator'
+import { CustomHTTPError } from '../../shared/errorHandler.js'
 
-// class Controllers {
-//   async activateAccount(req, res) {
-//     try {
-//       const { link } = req.query
-//       await userService.activate(link)
-//       res.redirect(CLIENT_ADDRESS)
-//     } catch (error) {
-//       console.error(chalk.red(error))
-//     }
-//   }
+class Controllers {
+  async activateAccount(req, res, next) {
+    try {
+      const { link } = req.query
+      await UserService.activate(link)
+      res.redirect(`${CLIENT_ADDRESS}/auth`)
+    } catch (error) {
+      next(error)
+    }
+  }
 
-//   async registrationUser(req, res) {
-//     try {
-//       const { email, password } = req.body
+  async registrationUser(req, res, next) {
+    try {
+      const { email, password } = req.body
+      checkParameters('registrationUser', { email, password })
 
-//       const userData = await userService.registrationUser(email, password)
+      await UserService.registrationUser(email, password)
+      res.json({ message: 'Check your email' })
+    } catch (error) {
+      next(error)
+    }
+  }
 
-//       const MAX_AGE_COOKIE = 30 * 24 * 60 * 60 * 1000 // 30d
-//       res.cookie('refreshToken', userData.refreshToken, {
-//         maxAge: MAX_AGE_COOKIE,
-//         httpOnly: true,
-//       })
+  async loginUser(req, res, next) {
+    try {
+      const { email, password } = req.body
+      checkParameters('loginUser', { email, password })
+      const { user, tokens } = await UserService.login(email, password)
+      const { accessToken, refreshToken } = tokens
 
-//       res.json(userData)
-//     } catch (error) {
-//       res.send({ error: error.message })
-//     }
-//   }
+      const cookieOptions = { maxAge: MAX_AGE_COOKIE, httpOnly: true }
+      res.cookie('refreshToken', refreshToken, cookieOptions)
 
-//   async loginUser(req, res) {
-//     try {
-//       const { email, password } = req.body
-//       const userData = await userService.login(email, password)
+      res.json({ user, accessToken })
+    } catch (error) {
+      next(error)
+    }
+  }
 
-//       res.cookie('refreshToken', userData.refreshToken, {
-//         maxAge: 30 * 24 * 60 * 60 * 1000,
-//         httpOnly: true,
-//       })
+  async logout(req, res, next) {
+    try {
+      const { refreshToken } = req.cookies
+      await UserService.logout(refreshToken)
+      res.clearCookie('refreshToken')
+      res.json({ message: 'Успех' })
+    } catch (error) {
+      next(error)
+    }
+  }
+}
 
-//       res.json(userData)
-//     } catch (error) {
-//       console.error(chalk.red(error))
-//     }
-//   }
-
-//   async logout(req, res) {
-//     try {
-//       const { refreshToken } = req.cookies
-//       await userService.logout(refreshToken)
-//       res.clearCookie('refreshToken')
-//     } catch (error) {
-//       console.error(chalk.red(error))
-//     }
-//   }
-
-//   async refreshToken(req, res) {
-//     try {
-//       const { refreshToken } = req.cookies
-//       const userData = await userService.refreshToken(refreshToken)
-//       res.cookie('refreshToken', userData.refreshToken, {
-//         maxAge: 30 * 24 * 60 * 60 * 1000,
-//         httpOnly: true,
-//       })
-//       res.json(userData)
-//     } catch (error) {
-//       console.error(chalk.red(error))
-//     }
-//   }
-// }
-
-// export default new Controllers()
+export default new Controllers()

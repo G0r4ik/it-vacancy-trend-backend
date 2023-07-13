@@ -23,3 +23,5 @@ export const HOURS_OF_START_PARSING = 15
 
 export const HH_QUERY_SEARCH = `https://spb.hh.ru/search/vacancy?no_magic=true&area=113&items_on_page=1&text=`
 export const HH_HTML_NODE_CONTAINNING_COUNT = 'bloko-header-3'
+
+export const MAX_AGE_COOKIE = 30 * 24 * 60 * 60 * 1000 // 30d

@@ -32,7 +32,7 @@ export function errorHandler(error, req, res, next) {
     subject: 'Обработана ошибка',
     text: `${error}, ${timestamp}\n${stack}`,
   })
-  res.status(httpStatusCode).send({
+  return res.status(httpStatusCode).send({
     error: {
       message,
       stack: process.env.NODE_ENV === 'production' ? '' : stack,

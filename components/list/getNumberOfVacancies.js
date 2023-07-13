@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import queries from './sql.js'
-import { getCurrentDate } from './helprers.js'
+import { getCurrentDate } from '../../shared/helpers.js'
 import { sendMail } from '../../shared/mail.js'
 import {
   HH_HTML_NODE_CONTAINNING_COUNT,
