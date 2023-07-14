@@ -22,16 +22,19 @@ export class EmptyParametersError extends CustomHTTPError {
   }
 }
 
-export function errorHandler(error, req, res, next) {
+export function errorHandler(errorParameter, req, res) {
+  let error = errorParameter
   if (!(error instanceof CustomHTTPError)) {
-    error = new CustomHTTPError(error.message)
+    error = new CustomHTTPError(errorParameter.message)
   }
   console.error(error.toString())
   const { message, httpStatusCode = 500, timestamp, stack } = error
-  sendMail({
-    subject: 'Обработана ошибка',
-    text: `${error}, ${timestamp}\n${stack}`,
-  })
+  if (process.env.NODE_ENV === 'production') {
+    sendMail({
+      subject: 'Обработана ошибка',
+      text: `${error}, ${timestamp}\n${stack}`,
+    })
+  }
   return res.status(httpStatusCode).send({
     error: {
       message,

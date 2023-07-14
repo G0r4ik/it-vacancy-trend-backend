@@ -17,9 +17,9 @@ router.get('/activate_account', controller.activateAccount)
 router.post(
   '/login',
   body('email').isEmail().withMessage('Not a valid e-mail address'),
-  // body('password')
-  // .isLength({ min: 8 })
-  // .withMessage('Пароль должен содержать минимум 8 символов'),
+  body('password')
+    .isLength({ min: 8 })
+    .withMessage('Пароль должен содержать минимум 8 символов'),
   validateRequest,
   controller.loginUser
 )

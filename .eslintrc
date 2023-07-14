@@ -4,10 +4,12 @@
     "eslint:all",
     "eslint:recommended",
     "airbnb",
-    "standard",
+    // "standard",
     "plugin:promise/recommended",
     "plugin:n/recommended",
     "plugin:unicorn/all",
+    "plugin:node/recommended",
+    "plugin:security/recommended",
     "prettier"
   ],
   "parserOptions": { "ecmaVersion": "latest", "sourceType": "module" },

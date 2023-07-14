@@ -5,12 +5,12 @@ import { getCurrentDate } from '../../shared/helpers.js'
 import { SERVER_ADDRESS } from '../../shared/consts.js'
 import { sendMail } from '../../shared/mail.js'
 import { CustomHTTPError } from '../../shared/errorHandler.js'
-import userDto from './dto.js'
-import { tokenService } from '../token/index.js'
+import { userDto, UserQueries } from '../user/index.js'
+import { generateTokens } from '../token/index.js'
 
 class UserService {
   async registrationUser(email, password) {
-    const hasUser = await queries.getUserByEmail(email)
+    const hasUser = await UserQueries.getUserByEmail(email)
 
     if (hasUser) {
       throw new CustomHTTPError(
@@ -38,24 +38,25 @@ class UserService {
         'Пользователя не существует или ссылка не активна'
       )
     }
-    await queries.changeUsersStatus(activationLink)
+    await queries.changeUserStatus(activationLink)
   }
 
-  async login(email, password, next) {
-    const user = await queries.getUserByEmail(email)
+  async login(email, password) {
+    const user = await UserQueries.getUserByEmail(email)
     if (!user) throw new CustomHTTPError('Пользователь не был найден', 403)
+
+    const isActiveAccount = user.is_active
+    if (!isActiveAccount) throw new CustomHTTPError('Провертье почту', 403)
+
     const hashPassword = await bcrypt.compare(password, user.user_password)
     if (!hashPassword) throw new CustomHTTPError('Неправильный пароль', 403)
 
-    const isActiveAccount = await queries.getStatusAccount(user.user_id)
-    if (!isActiveAccount) throw new CustomHTTPError('Провертье почту', 403)
-
     const userData = userDto(user)
-    const tokens = await tokenService.generateTokens(userData)
+    const tokens = await generateTokens(userData)
     return { tokens, user: userData }
   }
 
-  async logout(refreshToken) {
+  async logout() {
     // queries.deleteRefreshToken(refreshToken)
   }
 }

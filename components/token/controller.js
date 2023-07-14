@@ -1,4 +1,3 @@
-import chalk from 'chalk'
 import { MAX_AGE_COOKIE } from '../../shared/consts.js'
 import TokenService from './service.js'
 

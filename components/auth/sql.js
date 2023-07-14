@@ -1,22 +1,6 @@
 import { pQuery } from '../../config/database.js'
 
 class Queries {
-  async getUserByEmail(email) {
-    const user = await pQuery('SELECT * FROM users WHERE user_email = $1', [
-      email,
-    ])
-    return user[0]
-  }
-
-  async getUserById(id) {
-    const user = await pQuery('SELECT * FROM users WHERE user_id = $1', [id])
-    return user[0]
-  }
-
-  getUserIdByToken(token) {
-    return pQuery('SELECT * FROM users WHERE id_user = $1', [token])
-  }
-
   createAuth(userId, refreshToken) {
     return pQuery('INSERT INTO auth (id_user, refresh_token) VALUES ($1, $2)', [
       userId,
@@ -32,7 +16,7 @@ class Queries {
     return user[0]
   }
 
-  changeUsersStatus(activationLink) {
+  changeUserStatus(activationLink) {
     return pQuery(
       'UPDATE users SET is_active = true WHERE activation_link = $1',
       [activationLink]
@@ -42,13 +26,6 @@ class Queries {
   async getUserByActivationLink(activationLink) {
     const res = await pQuery('SELECT * FROM users WHERE activation_link = $1', [
       activationLink,
-    ])
-    return res[0]
-  }
-
-  async getStatusAccount(userId) {
-    const res = await pQuery('SELECT is_active FROM users WHERE user_id = $1', [
-      userId,
     ])
     return res[0]
   }

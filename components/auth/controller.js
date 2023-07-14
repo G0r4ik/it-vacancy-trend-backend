@@ -1,8 +1,6 @@
 import UserService from './service.js'
 import { CLIENT_ADDRESS, MAX_AGE_COOKIE } from '../../shared/consts.js'
 import { checkParameters } from '../../shared/helpers.js'
-import { validationResult } from 'express-validator'
-import { CustomHTTPError } from '../../shared/errorHandler.js'
 
 class Controllers {
   async activateAccount(req, res, next) {
