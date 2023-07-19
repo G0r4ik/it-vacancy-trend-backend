@@ -1,5 +1,5 @@
 import UserService from './service.js'
-import { CLIENT_ADDRESS, MAX_AGE_COOKIE } from '../../shared/consts.js'
+import config from '../../shared/consts.js'
 import { checkParameters } from '../../shared/helpers.js'
 
 class Controllers {
@@ -7,7 +7,7 @@ class Controllers {
     try {
       const { link } = req.query
       await UserService.activate(link)
-      res.redirect(`${CLIENT_ADDRESS}/auth`)
+      res.redirect(`${config.CLIENT_ADDRESS}/auth`)
     } catch (error) {
       next(error)
     }
@@ -32,7 +32,7 @@ class Controllers {
       const { user, tokens } = await UserService.login(email, password)
       const { accessToken, refreshToken } = tokens
 
-      const cookieOptions = { maxAge: MAX_AGE_COOKIE, httpOnly: true }
+      const cookieOptions = { maxAge: config.MAX_AGE_COOKIE, httpOnly: true }
       res.cookie('refreshToken', refreshToken, cookieOptions)
 
       res.json({ user, accessToken })

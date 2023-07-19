@@ -1,4 +1,4 @@
-import { MAX_AGE_COOKIE } from '../../shared/consts.js'
+import config from '../../shared/consts.js'
 import TokenService from './service.js'
 
 class TokenController {
@@ -6,7 +6,7 @@ class TokenController {
     try {
       const { refreshToken } = req.cookies
       const userData = await TokenService.refreshToken(refreshToken)
-      const cookieOptions = { maxAge: MAX_AGE_COOKIE, httpOnly: true }
+      const cookieOptions = { maxAge: config.MAX_AGE_COOKIE, httpOnly: true }
       res.cookie('refreshToken', userData.refreshToken, cookieOptions)
       res.json(userData)
     } catch (error) {

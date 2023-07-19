@@ -20,6 +20,15 @@ class Controllers {
     }
   }
 
+  async getOnlyTools(req, res, next) {
+    try {
+      const tools = await services.getOnlyTools()
+      res.json(tools)
+    } catch (error) {
+      next(error)
+    }
+  }
+
   async getTools(req, res, next) {
     try {
       const { region, jobBoard, dateId } = req.query

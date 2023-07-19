@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import * as uuid from 'uuid'
 import queries from './sql.js'
 import { getCurrentDate } from '../../shared/helpers.js'
-import { SERVER_ADDRESS } from '../../shared/consts.js'
+import config from '../../shared/consts.js'
 import { sendMail } from '../../shared/mail.js'
 import { CustomHTTPError } from '../../shared/errorHandler.js'
 import { userDto, UserQueries } from '../user/index.js'
@@ -26,7 +26,7 @@ class UserService {
       getCurrentDate(),
       activationLink
     )
-    const activateUrl = `${SERVER_ADDRESS}/activate_account?link=${activationLink}`
+    const activateUrl = `${config.SERVER_ADDRESS}/activate_account?link=${activationLink}`
     await sendMail({ text: `Your link: ${activateUrl}` })
   }
 

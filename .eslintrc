@@ -15,7 +15,7 @@
   "parserOptions": { "ecmaVersion": "latest", "sourceType": "module" },
   "plugins": ["promise", "unicorn"],
   "rules": {
-    "camelcase": "off", // !
+    // "camelcase": "off", // !
     "no-console": "off",
     "no-plusplus": "off",
     "unicorn/no-null": "off",
@@ -27,6 +27,7 @@
     "class-methods-use-this": "off", // !
     "import/prefer-default-export": "off",
     "import/no-extraneous-dependencies": "off",
+    "no-use-before-define": "off",
     "unicorn/prevent-abbreviations": [
       "error",
       {

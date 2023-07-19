@@ -1,6 +1,14 @@
 import { pQuery } from '../../config/database.js'
 
 class Queries {
+  getJobBoardsAndCounrties() {
+    return pQuery(`
+    SELECT jbr.id AS job_board_regions_id, jb.id AS job_board_id, c.id AS country_id, *
+    FROM job_board_regions AS jbr
+    JOIN job_boards AS jb ON jbr.job_board = jb.id
+    JOIN countries AS c ON jbr.country = c.id;`)
+  }
+
   getTools() {
     return pQuery('SELECT * FROM tools')
   }
@@ -15,10 +23,10 @@ class Queries {
 
   // Count
 
-  getOneCountOfAllTechnology(region, jobBoard, date) {
+  getOneCountOfAllTechnology(date) {
     return pQuery(
-      `SELECT * FROM count_of_items WHERE region = $1 AND job_board = $2 AND date_of_completion = $3`,
-      [region, jobBoard, date]
+      `SELECT * FROM count_of_items WHERE date_of_completion = $1`,
+      [date]
     )
   }
 

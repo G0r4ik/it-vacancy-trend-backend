@@ -22,8 +22,8 @@ export class EmptyParametersError extends CustomHTTPError {
   }
 }
 
-export function errorHandler(errorParameter, req, res) {
-  let error = errorParameter
+export function errorHandler(error, req, res) {
+  console.log('error hadler')
   if (!(error instanceof CustomHTTPError)) {
     error = new CustomHTTPError(errorParameter.message)
   }

@@ -8,5 +8,6 @@ router.get('/getCountOfCurrentItem', controller.getCountOfCurrentItem)
 router.get('/getCategories', controller.getCategories)
 router.get('/getDates', controller.getDates)
 router.get('/getTools', controller.getTools)
+router.get('/getOnlyTools', controller.getOnlyTools)
 
 export default router

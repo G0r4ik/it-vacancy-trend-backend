@@ -9,13 +9,16 @@ class Services {
     return queries.getCategories()
   }
 
+  async getOnlyTools() {
+    return queries.getTools()
+  }
+
   async getTools(region, jobBoard, dateId) {
     const hashCategories = await this.getHashCategories()
     const [lastDate] = await queries.getLastDate()
     const lastDateId = dateId || lastDate.id_date
 
-    const options = [region, jobBoard, lastDateId]
-    const counts = await queries.getOneCountOfAllTechnology(...options)
+    const counts = await queries.getOneCountOfAllTechnology(lastDateId)
 
     const allTools = await queries.getTools()
     const categoriesOfTools = await queries.getCategoriesTools()
@@ -62,11 +65,7 @@ class Services {
   }
 
   async getHashCounts(region, jobBoard, date) {
-    const tools = await queries.getOneCountOfAllTechnology(
-      region,
-      jobBoard,
-      date
-    )
+    const tools = await queries.getOneCountOfAllTechnology(date)
     const hashTools = {}
     for (const tool of tools) hashTools[tool.id_tool] = tool
     return hashTools
