@@ -51,10 +51,10 @@ class Queries {
   }
 
   // FIX хардкод HH
-  setCountsItem(id_tool, lastDateId, countVacancy) {
+  setCountsItem(id_tool, lastDateId, countVacancy, jobBoardRegions) {
     return pQuery(
-      `INSERT INTO count_of_items(region,job_board,id_tool,date_of_completion,count_of_item) VALUES('Russia','HeadHunter',$1,$2,$3)`,
-      [id_tool, lastDateId, countVacancy]
+      `INSERT INTO count_of_items(id_tool,date_of_completion,count_of_item, job_board_regions) VALUES($1,$2,$3,$4)`,
+      [id_tool, lastDateId, countVacancy, jobBoardRegions]
     )
   }
 

@@ -6,7 +6,6 @@ import { getCurrentDate } from '../../shared/helpers.js'
 import { sendMail } from '../../shared/mail.js'
 import config from '../../shared/consts.js'
 
-// getNumberOfVacancies() getCountOfItem() isFixedOrNotFound()
 export async function getNumberOfVacancies() {
   const jobBoardsAndCounrties = await queries.getJobBoardsAndCounrties()
   console.log(chalk.bgYellow('Start getNumberOfVacancies'))
@@ -15,18 +14,25 @@ export async function getNumberOfVacancies() {
   const previousCounts = await queries.getOneCountOfAllTechnology(
     previousDate.id_date
   )
+
   const dateId = await createAndGetDateOfNewParsing()
 
   const tools = await queries.getTools()
   for (const tool of tools) {
     const previousItem = previousCounts.filter(t => t.id_tool === tool.id_tool)
-    for (const item of jobBoardsAndCounrties) {
-      if (item.job_board_id === 1) {
-        await wrapper(getHeadHunter, item, tool, previousItem)
+    for (const jobBoardRegions of jobBoardsAndCounrties) {
+      if (+jobBoardRegions.job_board_id === 1) {
+        await wrapper(
+          getHeadHunter,
+          jobBoardRegions,
+          tool,
+          previousItem,
+          dateId
+        )
       }
-      if (item.job_board_id === 2) {
-        await wrapper(getLinkedIn, item, tool, previousItem)
-      }
+      //   if (+jobBoardRegions.job_board_id === 2) {
+      //     await wrapper(getLinkedIn, jobBoardRegions, tool, previousItem, dateId)
+      //   }
     }
   }
 
@@ -35,7 +41,15 @@ export async function getNumberOfVacancies() {
   console.log(chalk.bgYellow(`Потрачено минут: ${dateEnd}`))
 }
 
-async function wrapper(function_, jobBoardRegions, tool, previousCount, i = 0) {
+async function wrapper(
+  function_,
+  jobBoardRegions,
+  tool,
+  previousCounts,
+  date,
+  i = 0
+) {
+  console.log(chalk.bgCyan('Wrapper запускается'))
   if (i === config.NUMBER_OF_FAILED_ATTEMPTS) {
     console.log(`Слишком много неудачных запросов (${tool.name_tool})`)
     sendMail({
@@ -44,6 +58,10 @@ async function wrapper(function_, jobBoardRegions, tool, previousCount, i = 0) {
     return null
   }
   try {
+    const previousCount =
+      previousCounts.find(
+        item => +jobBoardRegions.id === +item.job_board_regions
+      )?.count_of_item || 0
     const count = await function_(tool)
     if (!isNormalCount(count, previousCount)) {
       console.log('Сильно отличающиеся числа')
@@ -53,15 +71,22 @@ async function wrapper(function_, jobBoardRegions, tool, previousCount, i = 0) {
       })
     }
     console.log(chalk.magenta(tool.name_tool, 'c:', count, 'p:', previousCount))
-    await queries.setCountsItem(tool.id_tool, count, jobBoardRegions)
+    await queries.setCountsItem(tool.id_tool, date, count, jobBoardRegions.id)
     return count
   } catch (error) {
-    console.log(error)
-    return wrapper(function_, jobBoardRegions, tool, previousCount, i + 1)
+    console.log(chalk.bgRed(error))
+    return wrapper(
+      function_,
+      jobBoardRegions,
+      tool,
+      previousCounts,
+      date,
+      i + 1
+    )
   }
 }
 
-async function getHeadHunter(tool, i = 0) {
+async function getHeadHunter(tool) {
   // FIX добавить hash table с tools где в качестве ключа будет id, проверить скорость
   // FIX исправить на Promise.all() (в прошлые разы слишком быстро поступали запросы к HH, поэтому ошибка появлялась)
 
@@ -73,7 +98,7 @@ async function getHeadHunter(tool, i = 0) {
   const parsedString = html.slice(indexOfStart + 45, indexOfStart + 300)
 
   if (!parsedString.includes('аканс') && !isFixedOrNotFound(parsedString)) {
-    return getCountOfItem(tool, i + 1)
+    throw new Error(`1`)
   }
   if (isFixedOrNotFound(parsedString)) return 0
 
@@ -84,37 +109,26 @@ async function getHeadHunter(tool, i = 0) {
   }
   return Number(currentCount)
 }
-async function getLinkedIn(tool, i = 0) {
-  if (i === config.NUMBER_OF_FAILED_ATTEMPTS) {
-    console.log(`Слишком много неудачных запросов (${tool.name_tool})`)
-    sendMail({
-      subject: `Слишком много неудачных запросов (${tool.name_tool})`,
-    })
-    return null
-  }
-
-  const proxyHost = '45.91.209.155'
-  const proxyPort = 11_110
-  const proxyUsername = 'q8DwsT'
-  const proxyPassword = 'Cvuz8S'
+async function getLinkedIn(tool) {
+  const proxyHost = '94.131.18.208'
+  const proxyPort = 9172
+  const proxyUsername = 'EcSmoM'
+  const proxyPassword = 'rbJ8rF'
   const proxyURL = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`
-  const encodedTool = encodeURIComponent(tool)
-  const targetUrl = `https://www.linkedin.com/jobs/search?keywords=${encodedTool}&position=1&pageNum=0`
+  const encodedTool = encodeURIComponent(tool.search_query)
+  const targetUrl = `https://www.linkedin.com/jobs/search?keywords=${encodedTool}`
   const agent = new HttpsProxyAgent(proxyURL)
 
-  try {
+
     const resp = await fetch(targetUrl, { agent })
     const data = await resp.text()
     const index = data.indexOf('results-context-header__job-count')
-    if (!index) throw new Error('index не обнаружен')
+    if (index) console.log(chalk.blueBright(data.slice(index, index + 130)))
+    if (index === -1) return 0
     let res = ''
-    for (let j = index; data[j] !== '<'; j++) res += data[j]
-    return res.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
-  } catch (error) {
-    console.log(chalk.bgGreen('произошла ошибка'))
-    console.log(error)
-    await getLinkedIn(tool, i)
-  }
+    for (let i = index; data[i] !== '<'; i++) res += data[i]
+    console.log(data.split('>').at(-1).trim().replaceAll(/[+,]/g, ''))
+    return data.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
 }
 
 async function createAndGetDateOfNewParsing() {
