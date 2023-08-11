@@ -15,10 +15,13 @@ class Services {
 
   async getTools(region, jobBoard, dateId) {
     const hashCategories = await this.getHashCategories()
-    const [lastDate] = await queries.getLastDate()
-    const lastDateId = dateId || lastDate.id_date
+    const [lastDate, lastDate2] = await queries.getTwoLastDates()
+    const lastDateId = lastDate.id_date
+    const lastDateId2 = lastDate2.id_date
+    // const lastDateId = dateId || lastDate.id_date
 
     const counts = await queries.getOneCountOfAllTechnology(lastDateId)
+    const counts2 = await queries.getOneCountOfAllTechnology(lastDateId2)
 
     const allTools = await queries.getTools()
     const categoriesOfTools = await queries.getCategoriesTools()
@@ -40,7 +43,13 @@ class Services {
       const count =
         counts.find(item => item.id_tool === tool.id_tool)?.count_of_item ||
         null
-      tool.counts = { [jobBoard]: { [lastDateId]: count } }
+      // tool.counts = { [jobBoard]: { [lastDateId]: count } }
+      const count2 =
+        counts2.find(item => item.id_tool === tool.id_tool)?.count_of_item ||
+        null
+      tool.counts = {
+        [jobBoard]: { [lastDateId]: count, [lastDateId2]: count2 },
+      }
     }
 
     return allTools.sort(

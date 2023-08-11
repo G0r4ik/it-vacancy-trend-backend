@@ -79,6 +79,12 @@ class Queries {
     )
   }
 
+  getTwoLastDates() {
+    return pQuery(
+      'SELECT * FROM date_of_completion WHERE is_all_found = TRUE ORDER BY id_date DESC LIMIT 2'
+    )
+  }
+
   createNewDate(date) {
     return pQuery(
       'INSERT INTO date_of_completion(date_of_completion) VALUES($1) RETURNING id_date',
