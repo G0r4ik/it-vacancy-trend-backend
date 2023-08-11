@@ -85,6 +85,23 @@ class Queries {
       [date]
     )
   }
+
+  //
+
+  async getCombinationOfRegionsAndJobBoard(job_board_id, regions_id) {
+    const response = await pQuery(
+      'SELECT * FROM job_board_regions WHERE job_board = $1 AND country = $2',
+      [job_board_id, regions_id]
+    )
+    return response[0]
+  }
+
+  getEventsOfOneTool(id_tool, job_board_id) {
+    return pQuery(
+      'SELECT * FROM events WHERE id_tool = $1 AND id_regions = $2',
+      [id_tool, job_board_id]
+    )
+  }
 }
 
 export default new Queries()

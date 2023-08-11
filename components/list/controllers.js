@@ -51,6 +51,18 @@ class Controllers {
       next(error)
     }
   }
+
+  async getEventsOfCurrentItem(req, res, next) {
+    try {
+      const { idTool, region, jobBoard } = req.query
+      const options = [idTool, region, jobBoard]
+      checkParameters('getCountOfCurrentItem', { idTool, region, jobBoard })
+      const events = await services.getEventsOfCurrentItem(...options)
+      res.json(events)
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 
 export default new Controllers()

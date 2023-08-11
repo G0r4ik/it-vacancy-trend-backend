@@ -22,6 +22,7 @@ class Services {
 
     const allTools = await queries.getTools()
     const categoriesOfTools = await queries.getCategoriesTools()
+
     // NOTE работает медленее на 50мс
     // const hashTools = await this.getHashCounts(region, jobBoard, lastDateId)
 
@@ -71,10 +72,11 @@ class Services {
     return hashTools
   }
 
-  async getCountOfCurrentItem(itemId) {
+  async getCountOfCurrentItem(itemId, region, jobBoard) {
     const counts = await queries.getCountOfCurrentItem(itemId)
     const dates = await queries.getDates()
     const fixedLength = counts.length
+
     for (let i = 0; i < dates.length - fixedLength; i++) {
       counts.unshift({
         date_of_completion: dates[i].id_date,
@@ -82,6 +84,15 @@ class Services {
       })
     }
     return counts
+  }
+
+  async getEventsOfCurrentItem(itemId, region, jobBoard) {
+    const jobBoardRegion = await queries.getCombinationOfRegionsAndJobBoard(
+      jobBoard,
+      region
+    )
+    const events = await queries.getEventsOfOneTool(itemId, jobBoardRegion.id)
+    return events
   }
 }
 

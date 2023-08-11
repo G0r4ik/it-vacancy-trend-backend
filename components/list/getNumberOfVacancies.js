@@ -119,16 +119,15 @@ async function getLinkedIn(tool) {
   const targetUrl = `https://www.linkedin.com/jobs/search?keywords=${encodedTool}`
   const agent = new HttpsProxyAgent(proxyURL)
 
-
-    const resp = await fetch(targetUrl, { agent })
-    const data = await resp.text()
-    const index = data.indexOf('results-context-header__job-count')
-    if (index) console.log(chalk.blueBright(data.slice(index, index + 130)))
-    if (index === -1) return 0
-    let res = ''
-    for (let i = index; data[i] !== '<'; i++) res += data[i]
-    console.log(data.split('>').at(-1).trim().replaceAll(/[+,]/g, ''))
-    return data.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
+  const resp = await fetch(targetUrl, { agent })
+  const data = await resp.text()
+  const index = data.indexOf('results-context-header__job-count')
+  if (index) console.log(chalk.blueBright(data.slice(index, index + 130)))
+  if (index === -1) return 0
+  let res = ''
+  for (let i = index; data[i] !== '<'; i++) res += data[i]
+  console.log(data.split('>').at(-1).trim().replaceAll(/[+,]/g, ''))
+  return data.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
 }
 
 async function createAndGetDateOfNewParsing() {
