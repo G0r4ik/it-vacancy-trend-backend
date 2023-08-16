@@ -24,6 +24,7 @@ app.listen(config.PORT, () =>
   console.log(`SERVER WORKING. PORT: ${config.PORT}`)
 )
 setInterval(async () => {
-  if (await canParsing()) await getNumberOfVacancies()
+  if ((await canParsing()) && process.env.NODE_ENV === 'production')
+    await getNumberOfVacancies()
 }, config.INTERVAL_OF_CHECK_CAN_PARSING)
 // getNumberOfVacancies() // for test

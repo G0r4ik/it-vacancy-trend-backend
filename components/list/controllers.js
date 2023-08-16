@@ -31,9 +31,9 @@ class Controllers {
 
   async getTools(req, res, next) {
     try {
-      const { region, jobBoard, dateId } = req.query
-      checkParameters('getTools', { region, jobBoard, dateId })
-      const tools = await services.getTools(region, jobBoard, dateId)
+      const { jobBoardRegion, dateId } = req.query
+      checkParameters('getTools', { jobBoardRegion, dateId })
+      const tools = await services.getTools(jobBoardRegion, dateId)
       res.json(tools)
     } catch (error) {
       next(error)

@@ -102,11 +102,17 @@ class Queries {
     return response[0]
   }
 
-  getEventsOfOneTool(id_tool, job_board_id) {
-    return pQuery(
-      'SELECT * FROM events WHERE id_tool = $1 AND id_regions = $2',
-      [id_tool, job_board_id]
-    )
+  // getEventsOfOneTool(id_tool, job_board_id) {
+  //   return pQuery(
+  //     'SELECT * FROM events WHERE id_tool = $1 AND id_regions = $2',
+  //     [id_tool, job_board_id]
+  //   )
+  // }
+
+  getEventsOfAllTools(jobBoardRegion) {
+    return pQuery('SELECT * FROM events WHERE job_board_region = $1', [
+      jobBoardRegion,
+    ])
   }
 }
 

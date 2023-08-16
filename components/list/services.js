@@ -13,7 +13,7 @@ class Services {
     return queries.getTools()
   }
 
-  async getTools(region, jobBoard, dateId) {
+  async getTools(jobBoardRegion, dateId) {
     const hashCategories = await this.getHashCategories()
     const [lastDate, lastDate2] = await queries.getTwoLastDates()
     const lastDateId = lastDate.id_date
@@ -29,9 +29,16 @@ class Services {
     // NOTE работает медленее на 50мс
     // const hashTools = await this.getHashCounts(region, jobBoard, lastDateId)
 
+    const events = await queries.getEventsOfAllTools(jobBoardRegion)
+    console.log(events)
+
     for (const tool of allTools) {
-      tool.region = region
-      tool.jobBoard = jobBoard
+      // tool.region = region
+      // tool.jobBoard = jobBoard
+      tool.events = []
+      for (const event of events) {
+        if (event.id_tool === tool.id_tool) tool.events.push(event)
+      }
 
       const categories = categoriesOfTools
         .filter(i => i.id_tool === tool.id_tool)
@@ -48,12 +55,13 @@ class Services {
         counts2.find(item => item.id_tool === tool.id_tool)?.count_of_item ||
         null
       tool.counts = {
-        [jobBoard]: { [lastDateId]: count, [lastDateId2]: count2 },
+        ['HeadHunter']: { [lastDateId]: count, [lastDateId2]: count2 },
       }
     }
 
     return allTools.sort(
-      (a, b) => b.counts[jobBoard][lastDateId] - a.counts[jobBoard][lastDateId]
+      (a, b) =>
+        b.counts['HeadHunter'][lastDateId] - a.counts['HeadHunter'][lastDateId]
     )
   }
 
@@ -95,14 +103,14 @@ class Services {
     return counts
   }
 
-  async getEventsOfCurrentItem(itemId, region, jobBoard) {
-    const jobBoardRegion = await queries.getCombinationOfRegionsAndJobBoard(
-      jobBoard,
-      region
-    )
-    const events = await queries.getEventsOfOneTool(itemId, jobBoardRegion.id)
-    return events
-  }
+  // async getEventsOfCurrentItem(itemId, region, jobBoard) {
+  //   const jobBoardRegion = await queries.getCombinationOfRegionsAndJobBoard(
+  //     jobBoard,
+  //     region
+  //   )
+  //   const events = await queries.getEventsOfOneTool(itemId, jobBoardRegion.id)
+  //   return events
+  // }
 }
 
 export default new Services()
