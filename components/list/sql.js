@@ -86,7 +86,11 @@ class Queries {
 
   getLastDate() {
     return pQuery(
-      `SELECT id_date as idDate FROM date_of_completion WHERE is_all_found = TRUE ORDER BY id_date DESC LIMIT 1;`
+      `SELECT id_date as idDate
+       FROM date_of_completion
+       WHERE is_all_found = TRUE
+       ORDER BY idDate DESC
+       LIMIT 1;`
     )
   }
 

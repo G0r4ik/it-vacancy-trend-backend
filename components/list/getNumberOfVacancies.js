@@ -19,13 +19,13 @@ export async function getNumberOfVacancies() {
 
   const dateId = await createAndGetDateOfNewParsing()
   const tools = ListMapper.tools(await queries.getTools())
-
   for (const jobBoardRegions of jobBoardsRegions) {
-    const options = [previousDate.idDate, jobBoardRegions.id]
-    const previousCounts = await queries.getOneCountOfAllTechnology(...options)
+    const options = [previousDate.iddate, jobBoardRegions.id]
+    const previousCounts = ListMapper.getOneCountOfAllTechnology(
+      await queries.getOneCountOfAllTechnology(...options)
+    )
     for (const tool of tools) {
       const previousItem = previousCounts.find(t => t.idTool === tool.idTool)
-
       // FIXME hardcode
       const params = [jobBoardRegions, tool, previousItem, dateId]
       if (+jobBoardRegions.id === 1) {
@@ -58,7 +58,7 @@ async function wrapper(
     return null
   }
   try {
-    const previousCount = previousCounts?.count_of_item || null
+    const previousCount = previousCounts.countOfItem ?? null
     const count = await function_(tool)
     if (!isNormalCount(count, previousCount) && isProduction) {
       console.log(chalk.log('Сильно отличающиеся числа'))
