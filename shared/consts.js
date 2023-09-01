@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv'
 
 dotenv.config()
 
-const isProduction = process.env.NODE_ENV === 'production'
+export const isProduction = process.env.NODE_ENV === 'production'
 
 const clientURL = process.env.CLIENT_ADDRESS
 const serverURL = process.env.SERVER_ADDRESS
@@ -23,14 +23,15 @@ const config = {
   NUMBER_OF_FAILED_ATTEMPTS: 10,
   HOURS_OF_START_PARSING: 15,
   MAX_AGE_COOKIE: 30 * 24 * 60 * 60 * 1000, // 30d
-  MAX_AGE_REFRESH_TOKEN: '30d', // 30d
-  MAX_AGE_ACCESS_TOKEN: '30m', // 30d
-  //
+  MAX_AGE_REFRESH_TOKEN: '30d',
+  MAX_AGE_ACCESS_TOKEN: '30m',
+
+  // Вынести это в базу:
   HH_QUERY_SEARCH: `https://spb.hh.ru/search/vacancy?no_magic=true&area=113&items_on_page=1&text=`,
   HH_HTML_NODE_CONTAINNING_COUNT: 'bloko-header-3',
-  //
   fixedOrNotFound: {
     HeadHunter: ['исправлен', 'не найдено'],
+    Indeed: [],
   },
 }
 

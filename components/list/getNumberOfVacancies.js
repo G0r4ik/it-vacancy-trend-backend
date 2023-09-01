@@ -1,44 +1,45 @@
-/* eslint-disable no-await-in-loop */
-import chalk from 'chalk'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+// import puppeteer from 'puppeteer-extra'
+// import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+import fetch from 'node-fetch'
 import queries from './sql.js'
 import { getCurrentDate } from '../../shared/helpers.js'
 import { sendMail } from '../../shared/mail.js'
-import config from '../../shared/consts.js'
+import chalk from '../../shared/chalkColors.js'
+import config, { isProduction } from '../../shared/consts.js'
+import ListMapper from './mapping.js'
 
 export async function getNumberOfVacancies() {
-  const jobBoardsAndCounrties = await queries.getJobBoardsAndCounrties()
-  console.log(chalk.bgYellow('Start getNumberOfVacancies'))
+  const jobBoardsRegions = ListMapper.jobBoardsRegions(
+    await queries.getJobBoardsRegions()
+  )
+  console.log(chalk.log('Start getNumberOfVacancies'))
   const dateStart = new Date()
   const [previousDate] = await queries.getLastDate()
-  const previousCounts = await queries.getOneCountOfAllTechnology(
-    previousDate.id_date
-  )
 
   const dateId = await createAndGetDateOfNewParsing()
+  const tools = ListMapper.tools(await queries.getTools())
 
-  const tools = await queries.getTools()
-  for (const tool of tools) {
-    const previousItem = previousCounts.filter(t => t.id_tool === tool.id_tool)
-    for (const jobBoardRegions of jobBoardsAndCounrties) {
-      if (+jobBoardRegions.job_board_id === 1) {
-        await wrapper(
-          getHeadHunter,
-          jobBoardRegions,
-          tool,
-          previousItem,
-          dateId
-        )
+  for (const jobBoardRegions of jobBoardsRegions) {
+    const options = [previousDate.idDate, jobBoardRegions.id]
+    const previousCounts = await queries.getOneCountOfAllTechnology(...options)
+    for (const tool of tools) {
+      const previousItem = previousCounts.find(t => t.idTool === tool.idTool)
+
+      // FIXME hardcode
+      const params = [jobBoardRegions, tool, previousItem, dateId]
+      if (+jobBoardRegions.id === 1) {
+        await wrapper(getHeadHunter, ...params)
       }
-      //   if (+jobBoardRegions.job_board_id === 2) {
-      //     await wrapper(getLinkedIn, jobBoardRegions, tool, previousItem, dateId)
-      //   }
+      if (+jobBoardRegions.id === 2) {
+        await wrapper(getLinkedIn, ...params)
+      }
     }
   }
 
   await queries.changeStatusOfDate(dateId)
   const dateEnd = ((Date.now() - dateStart) / 60_000).toFixed(2)
-  console.log(chalk.bgYellow(`Потрачено минут: ${dateEnd}`))
+  console.log(chalk.log(`Потрачено минут: ${dateEnd}`))
 }
 
 async function wrapper(
@@ -49,32 +50,28 @@ async function wrapper(
   date,
   i = 0
 ) {
-  console.log(chalk.bgCyan('Wrapper запускается'))
   if (i === config.NUMBER_OF_FAILED_ATTEMPTS) {
-    console.log(`Слишком много неудачных запросов (${tool.name_tool})`)
+    console.log(`Слишком много неудачных запросов (${tool.nameTool})`)
     sendMail({
-      subject: `Слишком много неудачных запросов (${tool.name_tool})`,
+      subject: `Слишком много неудачных запросов (${tool.nameTool})`,
     })
     return null
   }
   try {
-    const previousCount =
-      previousCounts.find(
-        item => +jobBoardRegions.id === +item.job_board_regions
-      )?.count_of_item || 0
+    const previousCount = previousCounts?.count_of_item || null
     const count = await function_(tool)
-    if (!isNormalCount(count, previousCount)) {
-      console.log('Сильно отличающиеся числа')
+    if (!isNormalCount(count, previousCount) && isProduction) {
+      console.log(chalk.log('Сильно отличающиеся числа'))
       sendMail({
         subject: 'Отличающиеся данные',
-        text: `Слишком отличающиеся числа у ${tool.name_tool}: прошлое: ${previousCount} текущее: ${count}`,
+        text: `Слишком отличающиеся числа у ${tool.nameTool}: прошлое: ${previousCount} текущее: ${count}`,
       })
     }
-    console.log(chalk.magenta(tool.name_tool, 'c:', count, 'p:', previousCount))
-    await queries.setCountsItem(tool.id_tool, date, count, jobBoardRegions.id)
+    console.log(chalk.log(tool.nameTool, 'c:', count, 'p:', previousCount))
+    await queries.setCountsItem(tool.idTool, date, count, jobBoardRegions.id)
     return count
   } catch (error) {
-    console.log(chalk.bgRed(error))
+    console.log(chalk.error(error))
     return wrapper(
       function_,
       jobBoardRegions,
@@ -109,30 +106,83 @@ async function getHeadHunter(tool) {
   }
   return Number(currentCount)
 }
+
 async function getLinkedIn(tool) {
-  const proxyHost = '94.131.18.208'
-  const proxyPort = 9172
-  const proxyUsername = 'EcSmoM'
-  const proxyPassword = 'rbJ8rF'
-  const proxyURL = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`
+  // const proxyHost = '80.66.87.66'
+  // const proxyPort = 10_000
+  // const proxyUsername = 'DRVkEbipFO'
+  // const proxyPassword = 'eGyPGUqxZQ'
+  // const proxyURL = `https://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`
   const encodedTool = encodeURIComponent(tool.search_query)
   const targetUrl = `https://www.linkedin.com/jobs/search?keywords=${encodedTool}`
-  const agent = new HttpsProxyAgent(proxyURL)
+
+  const agent = new HttpsProxyAgent(
+    'http://DRVkEbipFO:eGyPGUqxZQ@80.66.87.66:10000'
+  )
 
   const resp = await fetch(targetUrl, { agent })
   const data = await resp.text()
-  const index = data.indexOf('results-context-header__job-count')
-  if (index) console.log(chalk.blueBright(data.slice(index, index + 130)))
+  const index = data.indexOf('<title>')
   if (index === -1) return 0
   let res = ''
-  for (let i = index; data[i] !== '<'; i++) res += data[i]
-  console.log(data.split('>').at(-1).trim().replaceAll(/[+,]/g, ''))
-  return data.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
+  for (let i = index; data[i] !== ' '; i++) res += data[i]
+  return res.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
 }
+
+// async function getIndeed(tool) {
+//   const args = [
+//     '--no-sandbox',
+//     '--disable-setuid-sandbox',
+//     '--disable-infobars',
+//     '--window-position=0,0',
+//     '--ignore-certifcate-errors',
+//     '--ignore-certifcate-errors-spki-list',
+//     '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"',
+//   ]
+
+//   const options = {
+//     // args,
+//     headless: false,
+//     ignoreHTTPSErrors: true,
+//     userDataDir: './tmp',
+//   }
+
+//   puppeteer.use(StealthPlugin())
+//   // https://app.impact.com/
+//   // puppeteer usage as normal
+//   await puppeteer
+//     .launch(options)
+//     .then(async browser => {
+//       const page = await browser.newPage()
+//       await page.goto('https://www.indeed.com/jobs?q=javascript')
+//       await page.waitForTimeout(5000)
+//       await page.keyboard.press('Tab')
+//       await page.waitForTimeout(100)
+//       await page.keyboard.press('Space')
+//       await page.waitForTimeout(200)
+//       await page.waitForTimeout(250000)
+
+//       await page.screenshot({ path: 'testresult.png', fullPage: true })
+//       await browser.close()
+//       return 1
+//     })
+//     .catch(e => console.log(e))
+//   // const encodedTool = encodeURIComponent(tool.search_query)
+//   // const resp = await fetch(`https://www.indeed.com/jobs?q=${encodedTool}`)
+//   // fetch('https://www.indeed.com/jobs?q=javascript&vjk=f987180e50415756', {})
+//   // const html = await resp.text()
+//   // console.log(html)
+//   // const indexOfStart = html.indexOf('jobsearch-JobCountAndSortPane-jobCount')
+//   // const parsedString = html.slice(indexOfStart + 45, indexOfStart + 300)
+//   // console.log(parsedString)
+//   //   cloudscraper
+//   //     .get('https://www.indeed.com/jobs?q=javascript')
+//   //     .then(console.log, console.error)
+// }
 
 async function createAndGetDateOfNewParsing() {
   const [lastDate] = await queries.createNewDate(getCurrentDate())
-  return lastDate.id_date
+  return lastDate.idDate
 }
 
 function isFixedOrNotFound(parsedString) {

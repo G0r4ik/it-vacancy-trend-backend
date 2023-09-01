@@ -20,9 +20,14 @@ class Controllers {
     }
   }
 
-  async getOnlyTools(req, res, next) {
+  async getCountOfCurrentDate(req, res, next) {
     try {
-      const tools = await services.getOnlyTools()
+      const { idJobBoardsRegions, idDate } = req.query
+      checkParameters('getCountOfCurrentDate', { idJobBoardsRegions, idDate })
+      const tools = await services.getCountOfCurrentDate(
+        idJobBoardsRegions,
+        idDate
+      )
       res.json(tools)
     } catch (error) {
       next(error)
@@ -31,9 +36,7 @@ class Controllers {
 
   async getTools(req, res, next) {
     try {
-      const { jobBoardRegion, dateId } = req.query
-      checkParameters('getTools', { jobBoardRegion, dateId })
-      const tools = await services.getTools(jobBoardRegion, dateId)
+      const tools = await services.getTools()
       res.json(tools)
     } catch (error) {
       next(error)
@@ -42,9 +45,9 @@ class Controllers {
 
   async getCountOfCurrentItem(req, res, next) {
     try {
-      const { idTool, region, jobBoard } = req.query
-      const options = [idTool, region, jobBoard]
-      checkParameters('getCountOfCurrentItem', { idTool, region, jobBoard })
+      const { idTool, idJobBoardsRegions } = req.query
+      checkParameters('getCountOfCurrentItem', { idTool, idJobBoardsRegions })
+      const options = [idTool, idJobBoardsRegions]
       const counts = await services.getCountOfCurrentItem(...options)
       res.json(counts)
     } catch (error) {
@@ -52,13 +55,10 @@ class Controllers {
     }
   }
 
-  async getEventsOfCurrentItem(req, res, next) {
+  async getJobBoardsRegions(req, res, next) {
     try {
-      const { idTool, region, jobBoard } = req.query
-      const options = [idTool, region, jobBoard]
-      checkParameters('getCountOfCurrentItem', { idTool, region, jobBoard })
-      const events = await services.getEventsOfCurrentItem(...options)
-      res.json(events)
+      const jobBoardsRegions = await services.getJobBoardsRegions()
+      res.json(jobBoardsRegions)
     } catch (error) {
       next(error)
     }

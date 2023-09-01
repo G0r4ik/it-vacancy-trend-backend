@@ -1,115 +1,117 @@
 import queries from './sql.js'
+import ListMapping from './mapping.js'
 
 class Services {
-  getDates() {
-    return queries.getDates()
+  async getDates() {
+    return ListMapping.dates(await queries.getDates())
   }
 
   async getCategories() {
-    return queries.getCategories()
+    return ListMapping.categories(await queries.getCategories())
   }
 
-  async getOnlyTools() {
-    return queries.getTools()
+  async getJobBoardsRegions() {
+    const jobBoardsRegions = await queries.getJobBoardsRegions()
+    return ListMapping.jobBoardsRegions(jobBoardsRegions)
   }
 
-  async getTools(jobBoardRegion, dateId) {
-    const hashCategories = await this.getHashCategories()
-    const [lastDate, lastDate2] = await queries.getTwoLastDates()
-    const lastDateId = lastDate.id_date
-    const lastDateId2 = lastDate2.id_date
-    // const lastDateId = dateId || lastDate.id_date
+  async getCountOfCurrentDate(idJobBoardsRegions, dateId) {
+    const dates = ListMapping.dates(await queries.getDates())
+    const allTools = ListMapping.tools(await queries.getTools())
 
-    const counts = await queries.getOneCountOfAllTechnology(lastDateId)
-    const counts2 = await queries.getOneCountOfAllTechnology(lastDateId2)
+    const index = dates.map(date => date.idDate).indexOf(+dateId)
+    const lastDateId = dates[index].idDate
+    const lastDateId2 = dates[index - 1].idDate || dates[index].idDate
 
-    const allTools = await queries.getTools()
-    const categoriesOfTools = await queries.getCategoriesTools()
-
-    // NOTE работает медленее на 50мс
-    // const hashTools = await this.getHashCounts(region, jobBoard, lastDateId)
-
-    const events = await queries.getEventsOfAllTools(jobBoardRegion)
-    console.log(events)
+    const res = { [idJobBoardsRegions]: { counts: [], diff: [] } }
+    const counts = ListMapping.getOneCountOfAllTechnology(
+      await queries.getOneCountOfAllTechnology(lastDateId, idJobBoardsRegions)
+    )
+    const counts2 = ListMapping.getOneCountOfAllTechnology(
+      await queries.getOneCountOfAllTechnology(lastDateId2, idJobBoardsRegions)
+    )
 
     for (const tool of allTools) {
-      // tool.region = region
-      // tool.jobBoard = jobBoard
+      // FIXME
+      const count =
+        counts.find(item => item.idTool === tool.idTool)?.countOfItem || null
+      const count2 =
+        counts2.find(item => item.idTool === tool.idTool)?.countOfItem || null
+
+      res[idJobBoardsRegions].counts.push(count)
+      res[idJobBoardsRegions].diff.push(count - count2)
+    }
+
+    return res
+  }
+
+  async getTools() {
+    const hashCategories = await this.getHashCategories()
+    const allTools = ListMapping.tools(await queries.getTools())
+    const categoriesOfTools = ListMapping.categoriesOfTools(
+      await queries.getCategoriesTools()
+    )
+    const events = ListMapping.events(await queries.getEventsOfAllTools())
+
+    for (const tool of allTools) {
       tool.events = []
+      tool.categories = []
+      // FIXME
+      tool.counts = {}
+      tool.diff = {}
+      tool.is_controversial_word = false
+      tool.search_query = 'test'
+
       for (const event of events) {
-        if (event.id_tool === tool.id_tool) tool.events.push(event)
+        if (event.idTool === tool.idTool) tool.events.push(event)
       }
 
       const categories = categoriesOfTools
-        .filter(i => i.id_tool === tool.id_tool)
-        .sort((a, b) => a.id_category - b.id_category)
+        .filter(i => i.idTool === tool.idTool)
+        .sort((a, b) => a.idCategory - b.idCategory)
       for (const category of categories) {
-        if (!tool.categories) tool.categories = []
-        tool.categories.push(hashCategories[category.id_category])
-      }
-      const count =
-        counts.find(item => item.id_tool === tool.id_tool)?.count_of_item ||
-        null
-      // tool.counts = { [jobBoard]: { [lastDateId]: count } }
-      const count2 =
-        counts2.find(item => item.id_tool === tool.id_tool)?.count_of_item ||
-        null
-      tool.counts = {
-        ['HeadHunter']: { [lastDateId]: count, [lastDateId2]: count2 },
+        tool.categories.push(hashCategories[category.idCategory])
       }
     }
 
-    return allTools.sort(
-      (a, b) =>
-        b.counts['HeadHunter'][lastDateId] - a.counts['HeadHunter'][lastDateId]
+    return allTools
+  }
+
+  async getCountOfCurrentItem(itemId, jobBoardsRegionsID) {
+    const counts = ListMapping.countOfCurrentItem(
+      await queries.getCountOfCurrentItem(itemId, jobBoardsRegionsID)
     )
+
+    const dates = await queries.getDates()
+    const fixedLength = counts.length
+
+    const myLength = dates.length - fixedLength
+    const temporary = Array.from({ length: myLength }).fill(null)
+
+    return [...temporary, ...counts.map(c => c.countOfItem)]
   }
 
   async getHashCategories() {
-    const categories = await queries.getCategories()
+    const categories = ListMapping.categories(await queries.getCategories())
     const hashCategories = {}
     for (const category of categories) {
-      hashCategories[category.id_category] = category
+      hashCategories[category.idCategory] = category
     }
     return hashCategories
   }
 
-  // Вроде бы невыгодно использовать
   async getHashTools() {
-    const tools = await queries.getTools()
+    const tools = ListMapping.tools(await queries.getTools())
     const hashTools = {}
-    for (const tool of tools) hashTools[tool.id_tool] = tool
+    for (const tool of tools) hashTools[tool.idTool] = tool
     return hashTools
   }
 
-  async getHashCounts(region, jobBoard, date) {
-    const tools = await queries.getOneCountOfAllTechnology(date)
-    const hashTools = {}
-    for (const tool of tools) hashTools[tool.id_tool] = tool
-    return hashTools
-  }
-
-  async getCountOfCurrentItem(itemId, region, jobBoard) {
-    const counts = await queries.getCountOfCurrentItem(itemId)
-    const dates = await queries.getDates()
-    const fixedLength = counts.length
-
-    for (let i = 0; i < dates.length - fixedLength; i++) {
-      counts.unshift({
-        date_of_completion: dates[i].id_date,
-        count_of_item: null,
-      })
-    }
-    return counts
-  }
-
-  // async getEventsOfCurrentItem(itemId, region, jobBoard) {
-  //   const jobBoardRegion = await queries.getCombinationOfRegionsAndJobBoard(
-  //     jobBoard,
-  //     region
-  //   )
-  //   const events = await queries.getEventsOfOneTool(itemId, jobBoardRegion.id)
-  //   return events
+  // async getHashCounts(region, jobBoard, date) {
+  //   const tools = await queries.getOneCountOfAllTechnology(date)
+  //   const hashTools = {}
+  //   for (const tool of tools) hashTools[tool.idTool] = tool
+  //   return hashTools
   // }
 }
 

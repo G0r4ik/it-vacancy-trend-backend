@@ -13,7 +13,7 @@
   "dependencies": {
     "bcrypt": "^5.1.0",
     "chalk": "^4.1.0",
-    "compression": "^1.7.4",
+    "cloudscraper": "^4.6.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
@@ -26,6 +26,9 @@
     "needle": "^3.2.0",
     "nodemailer": "^6.9.1",
     "pg": "^8.10.0",
+    "puppeteer": "^21.0.3",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "socks-proxy-agent": "^8.0.1",
     "uuid": "^9.0.0"
   },

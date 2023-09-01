@@ -1,5 +1,6 @@
-/* eslint-disable max-classes-per-file */
 import { sendMail } from './mail.js'
+import chalk from './chalkColors.js'
+import { isProduction } from './consts.js'
 
 export class CustomHTTPError extends Error {
   constructor(message, httpStatusCode = 500) {
@@ -11,7 +12,7 @@ export class CustomHTTPError extends Error {
   }
 
   toString() {
-    return `${this.timestamp}\n${this.stack}`
+    return `${this.timestamp}${this.httpStatusCode}${this.name}\n${this.stack}`
   }
 }
 
@@ -23,13 +24,14 @@ export class EmptyParametersError extends CustomHTTPError {
 }
 
 export function errorHandler(error, req, res, next) {
-  console.log('error hadler')
+  console.log(chalk.error('error handler'))
+  // FIX
   if (!(error instanceof CustomHTTPError)) {
     error = new CustomHTTPError(error.message)
   }
-  console.error(error.toString())
+  console.log(chalk.error(error.toString()))
   const { message, httpStatusCode = 500, timestamp, stack } = error
-  if (process.env.NODE_ENV === 'production') {
+  if (isProduction) {
     sendMail({
       subject: 'Обработана ошибка',
       text: `${error}, ${timestamp}\n${stack}`,
@@ -38,7 +40,7 @@ export function errorHandler(error, req, res, next) {
   return res.status(httpStatusCode).send({
     error: {
       message,
-      stack: process.env.NODE_ENV === 'production' ? '' : stack,
+      stack: isProduction ? '' : stack,
     },
   })
 }
