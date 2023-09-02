@@ -96,7 +96,7 @@ class Queries {
 
   createNewDate(date) {
     return pQuery(
-      `INSERT INTO date_of_completion(date_of_completion) VALUES($1) RETURNING id_date;`,
+      `INSERT INTO date_of_completion(date_of_completion) VALUES($1) RETURNING id_date as idDate;`,
       [date]
     )
   }

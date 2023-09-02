@@ -182,7 +182,7 @@ async function getLinkedIn(tool) {
 
 async function createAndGetDateOfNewParsing() {
   const [lastDate] = await queries.createNewDate(getCurrentDate())
-  return lastDate.idDate
+  return lastDate.iddate
 }
 
 function isFixedOrNotFound(parsedString) {
