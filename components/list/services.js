@@ -34,9 +34,9 @@ class Services {
     for (const tool of allTools) {
       // FIXME
       const count =
-        counts.find(item => item.idTool === tool.idTool)?.countOfItem || null
+        counts.find(item => item.idTool === tool.idTool)?.countOfItem ?? null
       const count2 =
-        counts2.find(item => item.idTool === tool.idTool)?.countOfItem || null
+        counts2.find(item => item.idTool === tool.idTool)?.countOfItem ?? null
 
       res[idJobBoardsRegions].counts.push(count)
       res[idJobBoardsRegions].diff.push(count - count2)
