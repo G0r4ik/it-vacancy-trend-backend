@@ -1,3 +1,4 @@
+// FIXME
 class ListMapping {
   dates = dates =>
     dates.map(date => ({
@@ -14,7 +15,7 @@ class ListMapping {
 
   events = events =>
     events.map(event_ => ({
-      idEvent: Number(event_.id), //
+      idEvent: Number(event_.id),
       idTool: Number(event_.id_tool),
       idJoBoardRegion: Number(event_.job_board_region),
       idDate: Number(event_.id_date),
@@ -23,7 +24,7 @@ class ListMapping {
 
   jobBoardsRegions = jobBoardsRegions =>
     jobBoardsRegions.map(jobBoardRegion => ({
-      id: Number(jobBoardRegion.id), //
+      id: Number(jobBoardRegion.id),
       idRegion: Number(jobBoardRegion.country_id),
       idJobBoardRegions: Number(jobBoardRegion.job_board_regions_id),
       idJobBoard: Number(jobBoardRegion.job_board_id),

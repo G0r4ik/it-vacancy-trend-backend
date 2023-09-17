@@ -51,8 +51,11 @@ class Queries {
       `
         SELECT count_of_item
         FROM count_of_items
-        JOIN date_of_completion  ON count_of_items.date_of_completion = date_of_completion.id_date
-        WHERE date_of_completion.is_all_found = true AND count_of_items.id_tool = $1 AND job_board_regions = $2
+        JOIN date_of_completion ON
+        count_of_items.date_of_completion = date_of_completion.id_date
+        WHERE date_of_completion.is_all_found = true
+        AND count_of_items.id_tool = $1
+        AND job_board_regions = $2
         ORDER BY date_of_completion.date_of_completion;
       `,
       [itemId, jobBoardsRegions]
@@ -61,7 +64,11 @@ class Queries {
 
   setCountsItem(idTool, lastDateId, countVacancy, jobBoardsRegions) {
     return pQuery(
-      `INSERT INTO count_of_items(id_tool,date_of_completion,count_of_item, job_board_regions) VALUES($1,$2,$3,$4);`,
+      `
+      INSERT INTO count_of_items
+      (id_tool, date_of_completion, count_of_item, job_board_regions)
+      VALUES($1,$2,$3,$4);
+      `,
       [idTool, lastDateId, countVacancy, jobBoardsRegions]
     )
   }
@@ -86,19 +93,30 @@ class Queries {
 
   getLastDate() {
     return pQuery(
-      `SELECT id_date as idDate
-       FROM date_of_completion
-       WHERE is_all_found = TRUE
-       ORDER BY idDate DESC
-       LIMIT 1;`
+      `
+      SELECT id_date as idDate
+      FROM date_of_completion
+      WHERE is_all_found = TRUE
+      ORDER BY idDate DESC
+      LIMIT 1;
+       `
     )
   }
 
   createNewDate(date) {
     return pQuery(
-      `INSERT INTO date_of_completion(date_of_completion) VALUES($1) RETURNING id_date as idDate;`,
+      `
+      INSERT INTO date_of_completion(date_of_completion)
+      VALUES($1) RETURNING id_date as idDate;
+      `,
       [date]
     )
+  }
+
+  //
+
+  getEmptyWords() {
+    return pQuery(`SELECT * FROM not_found_words`)
   }
 }
 

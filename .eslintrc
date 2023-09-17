@@ -4,7 +4,6 @@
     "eslint:all",
     "eslint:recommended",
     "airbnb",
-    // "standard",
     "plugin:promise/recommended",
     "plugin:n/recommended",
     "plugin:unicorn/all",
@@ -15,20 +14,17 @@
   "parserOptions": { "ecmaVersion": "latest", "sourceType": "module" },
   "plugins": ["promise", "unicorn"],
   "rules": {
-    // "camelcase": "off", // !
-    "no-console": "off",
-    "no-plusplus": "off",
-    "unicorn/no-null": "off",
-    "import/extensions": "off",
-    "default-param-last": "off",
-    "no-use-before-define": "off",
-    "max-classes-per-file": "off",
-    "no-restricted-syntax": "off", // !
-    "unicorn/filename-case": "off",
-    "unicorn/no-empty-file": "off",
-    "class-methods-use-this": "off", // !
-    "import/prefer-default-export": "off",
-    "import/no-extraneous-dependencies": "off",
+    "no-console": 0,
+    "no-plusplus": 0,
+    "unicorn/no-null": 0,
+    "import/extensions": 0,
+    "no-use-before-define": 0, // !!!
+    "max-classes-per-file": 0, // !!!
+    "no-restricted-syntax": 0,
+    "unicorn/filename-case": 0,
+    "class-methods-use-this": 0, // !!!
+    "import/prefer-default-export": 0,
+    "security/detect-object-injection": 0,
     "unicorn/prevent-abbreviations": [
       "error",
       {

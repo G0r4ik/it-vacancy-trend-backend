@@ -1,5 +1,6 @@
 import queries from './sql.js'
 import ListMapping from './mapping.js'
+import { sendNoticeToTelegram } from '../../config/telegram.js'
 
 class Services {
   async getDates() {
@@ -15,7 +16,7 @@ class Services {
     return ListMapping.jobBoardsRegions(jobBoardsRegions)
   }
 
-  async getCountOfCurrentDate(idJobBoardsRegions, dateId) {
+  async getOneCountForAllTools(idJobBoardRegion, dateId) {
     const dates = ListMapping.dates(await queries.getDates())
     const allTools = ListMapping.tools(await queries.getTools())
 
@@ -23,23 +24,21 @@ class Services {
     const lastDateId = dates[index].idDate
     const lastDateId2 = dates[index - 1].idDate || dates[index].idDate
 
-    const res = { [idJobBoardsRegions]: { counts: [], diff: [] } }
+    const res = { [idJobBoardRegion]: { counts: [], diff: [] } }
     const counts = ListMapping.getOneCountOfAllTechnology(
-      await queries.getOneCountOfAllTechnology(lastDateId, idJobBoardsRegions)
+      await queries.getOneCountOfAllTechnology(lastDateId, idJobBoardRegion)
     )
     const counts2 = ListMapping.getOneCountOfAllTechnology(
-      await queries.getOneCountOfAllTechnology(lastDateId2, idJobBoardsRegions)
+      await queries.getOneCountOfAllTechnology(lastDateId2, idJobBoardRegion)
     )
 
     for (const tool of allTools) {
-      // FIXME
       const count =
         counts.find(item => item.idTool === tool.idTool)?.countOfItem ?? null
       const count2 =
         counts2.find(item => item.idTool === tool.idTool)?.countOfItem ?? null
-
-      res[idJobBoardsRegions].counts.push(count)
-      res[idJobBoardsRegions].diff.push(count - count2)
+      res[idJobBoardRegion].counts.push(count)
+      res[idJobBoardRegion].diff.push(count - count2)
     }
 
     return res
@@ -84,7 +83,9 @@ class Services {
 
     const dates = await queries.getDates()
     const fixedLength = counts.length
-
+    if (fixedLength !== dates.length) {
+      sendNoticeToTelegram('fixedLength !== dates.length')
+    }
     const myLength = dates.length - fixedLength
     const temporary = Array.from({ length: myLength }).fill(null)
 

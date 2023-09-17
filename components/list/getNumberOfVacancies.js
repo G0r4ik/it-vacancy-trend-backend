@@ -1,129 +1,133 @@
-import { HttpsProxyAgent } from 'https-proxy-agent'
-// import puppeteer from 'puppeteer-extra'
-// import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+/* eslint-disable no-await-in-loop */
+import * as dotenv from 'dotenv'
 import fetch from 'node-fetch'
-import queries from './sql.js'
-import { getCurrentDate } from '../../shared/helpers.js'
-import { sendMail } from '../../shared/mail.js'
-import chalk from '../../shared/chalkColors.js'
-import config, { isProduction } from '../../shared/consts.js'
-import ListMapper from './mapping.js'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
+import queries from './sql.js'
+import ListMapper from './mapping.js'
+import chalk from '../../shared/chalkColors.js'
+
+import { getCurrentDate } from '../../shared/helpers.js'
+import config, { isProduction } from '../../shared/consts.js'
+import { sendNoticeToTelegram } from '../../config/telegram.js'
+
+dotenv.config()
 export async function getNumberOfVacancies() {
   const jobBoardsRegions = ListMapper.jobBoardsRegions(
     await queries.getJobBoardsRegions()
   )
-  console.log(chalk.log('Start getNumberOfVacancies'))
+  chalk.log('Start getNumberOfVacancies')
   const dateStart = new Date()
   const [previousDate] = await queries.getLastDate()
 
+  const emptyWords = await queries.getEmptyWords()
   const dateId = await createAndGetDateOfNewParsing()
   const tools = ListMapper.tools(await queries.getTools())
-  for (const jobBoardRegions of jobBoardsRegions) {
-    const options = [previousDate.iddate, jobBoardRegions.id]
+  for (const jobBoardRegion of jobBoardsRegions) {
+    const words = emptyWords
+      .filter(w => w.job_boards_regions === jobBoardRegion.id)
+      .map(w => w.word)
+    const options = [previousDate.iddate, jobBoardRegion.id]
     const previousCounts = ListMapper.getOneCountOfAllTechnology(
       await queries.getOneCountOfAllTechnology(...options)
     )
     for (const tool of tools) {
       const previousItem = previousCounts.find(t => t.idTool === tool.idTool)
-      // FIXME hardcode
-      const params = [jobBoardRegions, tool, previousItem, dateId]
-      if (+jobBoardRegions.id === 1) {
-        await wrapper(getHeadHunter, ...params)
-      }
-      if (+jobBoardRegions.id === 2) {
-        await wrapper(getLinkedIn, ...params)
-      }
+      const parameters = [jobBoardRegion, tool, previousItem, dateId, words]
+      if (jobBoardRegion.id === 1) await wrapper(getHeadHunter, ...parameters)
+      if (jobBoardRegion.id === 2) await wrapper(getLinkedIn, ...parameters)
     }
   }
 
   await queries.changeStatusOfDate(dateId)
   const dateEnd = ((Date.now() - dateStart) / 60_000).toFixed(2)
-  console.log(chalk.log(`Потрачено минут: ${dateEnd}`))
+  chalk.log(`Потрачено минут: ${dateEnd}`)
 }
 
 async function wrapper(
   function_,
-  jobBoardRegions,
+  jobBoardRegion,
   tool,
   previousCounts,
   date,
+  words,
   i = 0
 ) {
   if (i === config.NUMBER_OF_FAILED_ATTEMPTS) {
     console.log(`Слишком много неудачных запросов (${tool.nameTool})`)
-    sendMail({
-      subject: `Слишком много неудачных запросов (${tool.nameTool})`,
-    })
+    sendNoticeToTelegram(`Слишком много неудачных запросов (${tool.nameTool})`)
     return null
   }
   try {
     const previousCount = previousCounts.countOfItem ?? null
-    const count = await function_(tool)
+    const encodedTool = encodeURIComponent(tool.search_query)
+
+    const { nodeContainCount, id } = jobBoardRegion
+    const url = jobBoardRegion.url.replace('<NAME_TOOL!>', encodedTool)
+    const count = await function_(url, nodeContainCount, words)
+
     if (!isNormalCount(count, previousCount) && isProduction) {
-      console.log(chalk.log('Сильно отличающиеся числа'))
-      sendMail({
-        subject: 'Отличающиеся данные',
-        text: `Слишком отличающиеся числа у ${tool.nameTool}: прошлое: ${previousCount} текущее: ${count}`,
-      })
+      chalk.log('Сильно отличающиеся числа')
+      sendNoticeToTelegram(`Сильно отличающиеся числа (${tool.nameTool})`)
     }
-    console.log(chalk.log(tool.nameTool, 'c:', count, 'p:', previousCount))
-    await queries.setCountsItem(tool.idTool, date, count, jobBoardRegions.id)
+    chalk.log(`${tool.nameTool} cur: ${count} prev: ${previousCount}`)
+    await queries.setCountsItem(tool.idTool, date, count, id)
     return count
   } catch (error) {
-    console.log(chalk.error(error))
+    chalk.error(error)
     return wrapper(
       function_,
-      jobBoardRegions,
+      jobBoardRegion,
       tool,
       previousCounts,
       date,
+      words,
       i + 1
     )
   }
 }
 
-async function getHeadHunter(tool) {
-  // FIX добавить hash table с tools где в качестве ключа будет id, проверить скорость
-  // FIX исправить на Promise.all() (в прошлые разы слишком быстро поступали запросы к HH, поэтому ошибка появлялась)
-
-  const encodedTool = encodeURIComponent(tool.search_query)
-  const resp = await fetch(`${config.HH_QUERY_SEARCH}${encodedTool}`)
+async function getHeadHunter(url, nodeContainCount, words) {
+  const resp = await fetch(url)
   const html = await resp.text()
 
-  const indexOfStart = html.indexOf(config.HH_HTML_NODE_CONTAINNING_COUNT)
+  const indexOfStart = html.indexOf(nodeContainCount)
   const parsedString = html.slice(indexOfStart + 45, indexOfStart + 300)
 
-  if (!parsedString.includes('аканс') && !isFixedOrNotFound(parsedString)) {
-    throw new Error(`1`)
+  if (
+    !parsedString.includes('аканс') &&
+    !isFixedOrNotFound(parsedString, words)
+  ) {
+    throw new Error('какая то ошибка')
   }
-  if (isFixedOrNotFound(parsedString)) return 0
+  if (isFixedOrNotFound(parsedString, words)) return 0
 
   let currentCount = ''
   for (const char of parsedString) {
-    if (!isNaN(char) && !isNaN(Number.parseFloat(char))) currentCount += char
+    if (!Number.isNaN(+char) && !Number.isNaN(Number.parseFloat(char)))
+      currentCount += char
     if (char === '<') break
   }
   return Number(currentCount)
 }
 
-async function getLinkedIn(tool) {
-  // const proxyHost = '80.66.87.66'
-  // const proxyPort = 10_000
-  // const proxyUsername = 'DRVkEbipFO'
-  // const proxyPassword = 'eGyPGUqxZQ'
-  // const proxyURL = `https://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`
-  const encodedTool = encodeURIComponent(tool.search_query)
-  const targetUrl = `https://www.linkedin.com/jobs/search?keywords=${encodedTool}`
+async function getLinkedIn(url, nodeContainCount, words) {
+  const agent = new HttpsProxyAgent(process.env.PROXY)
 
-  const agent = new HttpsProxyAgent(
-    'http://DRVkEbipFO:eGyPGUqxZQ@80.66.87.66:10000'
-  )
-
-  const resp = await fetch(targetUrl, { agent })
+  const resp = await fetch(url, { agent })
   const data = await resp.text()
-  const index = data.indexOf('<title>')
-  if (index === -1) return 0
+
+  const index = data.indexOf(nodeContainCount)
+
+  if (
+    !data.includes('results-context-header__job-count') &&
+    !isFixedOrNotFound(data, words)
+  ) {
+    console.log('ни результата, ни исправления')
+    throw new Error('Ошибка при парсинге')
+  }
+  if (isFixedOrNotFound(data, words)) return 0
+
   let res = ''
   for (let i = index; data[i] !== ' '; i++) res += data[i]
   return res.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
@@ -185,8 +189,8 @@ async function createAndGetDateOfNewParsing() {
   return lastDate.iddate
 }
 
-function isFixedOrNotFound(parsedString) {
-  for (const string of config.fixedOrNotFound.HeadHunter) {
+function isFixedOrNotFound(parsedString, words) {
+  for (const string of words) {
     if (parsedString.includes(string)) return true
   }
   return false

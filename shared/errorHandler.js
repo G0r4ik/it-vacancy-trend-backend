@@ -1,6 +1,7 @@
 import { sendMail } from './mail.js'
 import chalk from './chalkColors.js'
 import { isProduction } from './consts.js'
+import { sendNoticeToTelegram } from '../config/telegram.js'
 
 export class CustomHTTPError extends Error {
   constructor(message, httpStatusCode = 500) {
@@ -12,7 +13,7 @@ export class CustomHTTPError extends Error {
   }
 
   toString() {
-    return `${this.timestamp}${this.httpStatusCode}${this.name}\n${this.stack}`
+    return `${this.timestamp}\n${this.name} ${this.httpStatusCode}\n${this.message}\n----\n${this.stack}`
   }
 }
 
@@ -23,14 +24,18 @@ export class EmptyParametersError extends CustomHTTPError {
   }
 }
 
-export function errorHandler(error, req, res, next) {
-  console.log(chalk.error('error handler'))
-  // FIX
+// eslint-disable-next-line no-unused-vars
+export async function errorHandler(errorP, req, res, next) {
+  chalk.error('error handler')
+  let error = errorP
   if (!(error instanceof CustomHTTPError)) {
     error = new CustomHTTPError(error.message)
   }
-  console.log(chalk.error(error.toString()))
+  chalk.error(error.toString())
   const { message, httpStatusCode = 500, timestamp, stack } = error
+
+  sendNoticeToTelegram(error.toString())
+
   if (isProduction) {
     sendMail({
       subject: 'Обработана ошибка',

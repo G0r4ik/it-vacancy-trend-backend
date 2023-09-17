@@ -15,9 +15,9 @@ const config = {
   CLIENT_ADDRESS: isProduction ? clientURL : `http://localhost:${clientPort}`,
   SERVER_ADDRESS: isProduction ? serverURL : `http://localhost:${serverPort}`,
   CLIENT_ADDRESS_TEST: process.env.CLIENT_ADDRESS_TEST,
-  //
+
   PORT: process.env.PORT || serverPort,
-  //
+
   INTERVAL_OF_CHECK_CAN_PARSING: 1000 * 45 * 60, // 45 минут
   MIN_VALUE_CHECKING_DIFFERENCES: 30,
   NUMBER_OF_FAILED_ATTEMPTS: 10,
@@ -26,12 +26,9 @@ const config = {
   MAX_AGE_REFRESH_TOKEN: '30d',
   MAX_AGE_ACCESS_TOKEN: '30m',
 
-  // Вынести это в базу:
-  HH_QUERY_SEARCH: `https://spb.hh.ru/search/vacancy?no_magic=true&area=113&items_on_page=1&text=`,
-  HH_HTML_NODE_CONTAINNING_COUNT: 'bloko-header-3',
+  // Вынести это в базу: FIXME
   fixedOrNotFound: {
     HeadHunter: ['исправлен', 'не найдено'],
-    Indeed: [],
   },
 }
 

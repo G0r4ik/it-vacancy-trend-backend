@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 
 export default {
-  error: chalk.red.bold.underline,
-  log: chalk.yellow.bold,
+  error: text => console.log(chalk.red.bold.underline(text)),
+  log: text => console.log(chalk.yellow.bold(text)),
 }
