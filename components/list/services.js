@@ -1,6 +1,5 @@
 import queries from './sql.js'
 import ListMapping from './mapping.js'
-import { sendNoticeToTelegram } from '../../config/telegram.js'
 
 class Services {
   async getDates() {
@@ -83,9 +82,7 @@ class Services {
 
     const dates = await queries.getDates()
     const fixedLength = counts.length
-    if (fixedLength !== dates.length) {
-      sendNoticeToTelegram('fixedLength !== dates.length')
-    }
+
     const myLength = dates.length - fixedLength
     const temporary = Array.from({ length: myLength }).fill(null)
 

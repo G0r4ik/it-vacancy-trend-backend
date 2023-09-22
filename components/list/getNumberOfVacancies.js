@@ -12,6 +12,7 @@ import config, { isProduction } from '../../shared/consts.js'
 import { sendNoticeToTelegram } from '../../config/telegram.js'
 
 dotenv.config()
+
 export async function getNumberOfVacancies() {
   const jobBoardsRegions = ListMapper.jobBoardsRegions(
     await queries.getJobBoardsRegions()
@@ -132,57 +133,6 @@ async function getLinkedIn(url, nodeContainCount, words) {
   for (let i = index; data[i] !== ' '; i++) res += data[i]
   return res.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
 }
-
-// async function getIndeed(tool) {
-//   const args = [
-//     '--no-sandbox',
-//     '--disable-setuid-sandbox',
-//     '--disable-infobars',
-//     '--window-position=0,0',
-//     '--ignore-certifcate-errors',
-//     '--ignore-certifcate-errors-spki-list',
-//     '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"',
-//   ]
-
-//   const options = {
-//     // args,
-//     headless: false,
-//     ignoreHTTPSErrors: true,
-//     userDataDir: './tmp',
-//   }
-
-//   puppeteer.use(StealthPlugin())
-//   // https://app.impact.com/
-//   // puppeteer usage as normal
-//   await puppeteer
-//     .launch(options)
-//     .then(async browser => {
-//       const page = await browser.newPage()
-//       await page.goto('https://www.indeed.com/jobs?q=javascript')
-//       await page.waitForTimeout(5000)
-//       await page.keyboard.press('Tab')
-//       await page.waitForTimeout(100)
-//       await page.keyboard.press('Space')
-//       await page.waitForTimeout(200)
-//       await page.waitForTimeout(250000)
-
-//       await page.screenshot({ path: 'testresult.png', fullPage: true })
-//       await browser.close()
-//       return 1
-//     })
-//     .catch(e => console.log(e))
-//   // const encodedTool = encodeURIComponent(tool.search_query)
-//   // const resp = await fetch(`https://www.indeed.com/jobs?q=${encodedTool}`)
-//   // fetch('https://www.indeed.com/jobs?q=javascript&vjk=f987180e50415756', {})
-//   // const html = await resp.text()
-//   // console.log(html)
-//   // const indexOfStart = html.indexOf('jobsearch-JobCountAndSortPane-jobCount')
-//   // const parsedString = html.slice(indexOfStart + 45, indexOfStart + 300)
-//   // console.log(parsedString)
-//   //   cloudscraper
-//   //     .get('https://www.indeed.com/jobs?q=javascript')
-//   //     .then(console.log, console.error)
-// }
 
 async function createAndGetDateOfNewParsing() {
   const [lastDate] = await queries.createNewDate(getCurrentDate())
