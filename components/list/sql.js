@@ -12,7 +12,7 @@ class Queries {
 
   getTools() {
     return pQuery(`
-      SELECT id_tool, name_tool, search_query
+      SELECT id_tool, name_tool
       FROM tools ORDER BY id_tool;
     `)
   }
@@ -116,7 +116,11 @@ class Queries {
   //
 
   getEmptyWords() {
-    return pQuery(`SELECT * FROM not_found_words`)
+    return pQuery(`SELECT * FROM not_found_words;`)
+  }
+
+  getSearchQueries() {
+    return pQuery(`SELECT * FROM search_queries;`)
   }
 }
 

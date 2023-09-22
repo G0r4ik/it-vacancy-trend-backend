@@ -38,7 +38,6 @@ class ListMapping {
     tools.map(tool => ({
       idTool: tool.id_tool,
       nameTool: tool.name_tool,
-      search_query: tool.search_query,
     }))
 
   categoriesOfTools = categoriesOfTools =>
@@ -56,6 +55,14 @@ class ListMapping {
     getOneCountOfAllTechnology.map(category => ({
       idTool: category.id_tool,
       countOfItem: category.count_of_item,
+    }))
+
+  searchQueries = searchQueries =>
+    searchQueries.map(query => ({
+      id: Number(query.id),
+      idTool: query.id_tool,
+      idJobBoardRegions: query.id_job_board_regions,
+      query: query.query,
     }))
 }
 

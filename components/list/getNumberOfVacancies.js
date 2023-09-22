@@ -20,6 +20,9 @@ export async function getNumberOfVacancies() {
   chalk.log('Start getNumberOfVacancies')
   const dateStart = new Date()
   const [previousDate] = await queries.getLastDate()
+  const searchQueries = ListMapper.searchQueries(
+    await queries.getSearchQueries()
+  )
 
   const emptyWords = await queries.getEmptyWords()
   const dateId = await createAndGetDateOfNewParsing()
@@ -33,6 +36,12 @@ export async function getNumberOfVacancies() {
       await queries.getOneCountOfAllTechnology(...options)
     )
     for (const tool of tools) {
+      const searchQuery = searchQueries.find(
+        s =>
+          s.idJobBoardRegions === jobBoardRegion.id && s.idTool === tool.idTool
+      )
+
+      tool.searchQuery = searchQuery?.query ?? tool.nameTool
       const previousItem = previousCounts.find(t => t.idTool === tool.idTool)
       const parameters = [jobBoardRegion, tool, previousItem, dateId, words]
       if (jobBoardRegion.id === 1) await wrapper(getHeadHunter, ...parameters)
@@ -61,7 +70,8 @@ async function wrapper(
   }
   try {
     const previousCount = previousCounts.countOfItem ?? null
-    const encodedTool = encodeURIComponent(tool.search_query)
+    console.log(tool.searchQuery)
+    const encodedTool = encodeURIComponent(tool.searchQuery)
 
     const { nodeContainCount, id } = jobBoardRegion
     const url = jobBoardRegion.url.replace('<NAME_TOOL!>', encodedTool)
