@@ -69,7 +69,7 @@ async function wrapper(
     return null
   }
   try {
-    const previousCount = previousCounts.countOfItem ?? null
+    const previousCount = previousCounts?.countOfItem ?? null
     console.log(tool.searchQuery)
     const encodedTool = encodeURIComponent(tool.searchQuery)
 
@@ -79,7 +79,7 @@ async function wrapper(
 
     if (!isNormalCount(count, previousCount) && isProduction) {
       chalk.log('Сильно отличающиеся числа')
-      sendNoticeToTelegram(`Сильно отличающиеся числа (${tool.nameTool})`)
+      sendNoticeToTelegram(`Сильно отличающиеся числа (${tool.nameTool}) (c: ${count} p: ${previousCount})`)
     }
     chalk.log(`${tool.nameTool} cur: ${count} prev: ${previousCount}`)
     await queries.setCountsItem(tool.idTool, date, count, id)
