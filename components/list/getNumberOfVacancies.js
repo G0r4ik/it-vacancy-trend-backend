@@ -17,7 +17,7 @@ export async function getNumberOfVacancies() {
   const jobBoardsRegions = ListMapper.jobBoardsRegions(
     await queries.getJobBoardsRegions()
   )
-  chalk.log('Start getNumberOfVacancies')
+  chalk.log(`Start getNumberOfVacancies ${new Date()}`)
   const dateStart = new Date()
   const [previousDate] = await queries.getLastDate()
   const searchQueries = ListMapper.searchQueries(
@@ -51,7 +51,7 @@ export async function getNumberOfVacancies() {
 
   await queries.changeStatusOfDate(dateId)
   const dateEnd = ((Date.now() - dateStart) / 60_000).toFixed(2)
-  chalk.log(`Потрачено минут: ${dateEnd}`)
+  chalk.log(`Потрачено минут: ${dateEnd} (${new Date()})`)
 }
 
 async function wrapper(
@@ -64,13 +64,15 @@ async function wrapper(
   i = 0
 ) {
   if (i === config.NUMBER_OF_FAILED_ATTEMPTS) {
-    console.log(`Слишком много неудачных запросов (${tool.nameTool})`)
+    console.log(
+      `Слишком много неудачных запросов (${tool.nameTool}) (${function_.name})`
+    )
     sendNoticeToTelegram(`Слишком много неудачных запросов (${tool.nameTool})`)
     return null
   }
   try {
     const previousCount = previousCounts?.countOfItem ?? null
-    console.log(tool.searchQuery)
+    console.log(`${tool.searchQuery}, ${function_.name}`)
     const encodedTool = encodeURIComponent(tool.searchQuery)
 
     const { nodeContainCount, id } = jobBoardRegion
@@ -79,7 +81,9 @@ async function wrapper(
 
     if (!isNormalCount(count, previousCount) && isProduction) {
       chalk.log('Сильно отличающиеся числа')
-      sendNoticeToTelegram(`Сильно отличающиеся числа (${tool.nameTool}) (c: ${count} p: ${previousCount})`)
+      sendNoticeToTelegram(
+        `Сильно отличающиеся числа (${tool.nameTool}) (c: ${count} p: ${previousCount}) (${function_.name})`
+      )
     }
     chalk.log(`${tool.nameTool} cur: ${count} prev: ${previousCount}`)
     await queries.setCountsItem(tool.idTool, date, count, id)
@@ -123,6 +127,7 @@ async function getHeadHunter(url, nodeContainCount, words) {
 }
 
 async function getLinkedIn(url, nodeContainCount, words) {
+  await new Promise(resolve => setTimeout(resolve, 5000))
   const agent = new HttpsProxyAgent(process.env.PROXY)
 
   const resp = await fetch(url, { agent })
@@ -159,8 +164,7 @@ function isFixedOrNotFound(parsedString, words) {
 function isNormalCount(currentCount, previousCount) {
   const maxValue = Math.max(currentCount, previousCount)
   const minValue = Math.min(currentCount, previousCount)
-
-  const c = maxValue / 2 < minValue
+  const c = maxValue / 2 <= minValue
   return maxValue < config.MIN_VALUE_CHECKING_DIFFERENCES || c
 }
 
