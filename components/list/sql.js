@@ -3,12 +3,16 @@ import { pQuery } from '../../config/database.js'
 class Queries {
   getJobBoardsRegions() {
     return pQuery(`
-      SELECT jbr.id AS job_board_regions_id, jb.id AS job_board_id, c.id AS country_id, *
+      SELECT jbr.id AS job_board_regions_id, jb.id AS job_board_id, c.id AS country_id, jbr.is_completely_parse, *
       FROM job_board_regions AS jbr
       JOIN job_boards AS jb ON jbr.job_board = jb.id
-      JOIN countries AS c ON jbr.country = c.id;
+      JOIN regions AS c ON jbr.country = c.id;
     `)
   }
+
+  // getDates() {
+  //   return pQuery(`SELECT * FROM date_check_jobboard`)
+  // }
 
   getTools() {
     return pQuery(`
@@ -103,6 +107,17 @@ class Queries {
     )
   }
 
+  getLastNotTrueDate() {
+    return pQuery(
+      `
+      SELECT id_date as idDate, date_of_completion
+      FROM date_of_completion
+      ORDER BY idDate DESC
+      LIMIT 1;
+       `
+    )
+  }
+
   createNewDate(date) {
     return pQuery(
       `
@@ -115,12 +130,23 @@ class Queries {
 
   //
 
-  getEmptyWords() {
-    return pQuery(`SELECT * FROM not_found_words;`)
+  getEmptyWords(jobboardId) {
+    return pQuery(
+      `
+      SELECT * FROM not_found_words
+      WHERE job_boards_regions = $1;`,
+      [jobboardId]
+    )
   }
 
-  getSearchQueries() {
-    return pQuery(`SELECT * FROM search_queries;`)
+  getSearchQueries(jobboardId) {
+    return pQuery(
+      `
+    SELECT * FROM search_queries
+    WHERE id_job_board_regions = $1;;
+    `,
+      [jobboardId]
+    )
   }
 }
 

@@ -1,10 +1,13 @@
 /* eslint-disable no-await-in-loop */
 import * as dotenv from 'dotenv'
-import fetch from 'node-fetch'
-import { HttpsProxyAgent } from 'https-proxy-agent'
+
+import {
+  getHeadHunter,
+  getLinkedIn,
+} from '../../shared/parseFunctions/index.js'
 
 import queries from './sql.js'
-import ListMapper from './mapping.js'
+import ListMapper from '../../shared/mapping.js'
 import chalk from '../../shared/chalkColors.js'
 
 import { getCurrentDate } from '../../shared/helpers.js'
@@ -14,41 +17,37 @@ import { sendNoticeToTelegram } from '../../config/telegram.js'
 dotenv.config()
 
 export async function getNumberOfVacancies() {
-  const jobBoardsRegions = ListMapper.jobBoardsRegions(
-    await queries.getJobBoardsRegions()
-  )
-  chalk.log(`Start getNumberOfVacancies ${new Date()}`)
   const dateStart = new Date()
-  const [previousDate] = await queries.getLastDate()
-  const searchQueries = ListMapper.searchQueries(
-    await queries.getSearchQueries()
-  )
+  chalk.log(`Start getNumberOfVacancies ${dateStart}`)
 
-  const emptyWords = await queries.getEmptyWords()
+  const [previousDate] = await queries.getLastDate()
   const dateId = await createAndGetDateOfNewParsing()
   const tools = ListMapper.tools(await queries.getTools())
-  for (const jobBoardRegion of jobBoardsRegions) {
-    const words = emptyWords
-      .filter(w => w.job_boards_regions === jobBoardRegion.id)
-      .map(w => w.word)
-    const options = [previousDate.iddate, jobBoardRegion.id]
+
+  const jobboards = ListMapper.jobBoardsRegions(
+    await queries.getJobBoardsRegions()
+  ).filter(i => i.isCompletelyParse)
+  // console.log(await queries.getJobBoardsRegions())
+  console.log(jobboards)
+  for (const jobboard of jobboards) {
+    const emptyWordsNotMapped = await queries.getEmptyWords(jobboard.id)
+    const emptyWords = emptyWordsNotMapped.map(w => w.word)
+    const searchQueries = ListMapper.searchQueries(
+      await queries.getSearchQueries(jobboard.id)
+    )
     const previousCounts = ListMapper.getOneCountOfAllTechnology(
-      await queries.getOneCountOfAllTechnology(...options)
+      await queries.getOneCountOfAllTechnology(previousDate.iddate, jobboard.id)
     )
     for (const tool of tools) {
-      const searchQuery = searchQueries.find(
-        s =>
-          s.idJobBoardRegions === jobBoardRegion.id && s.idTool === tool.idTool
-      )
-
+      const searchQuery = searchQueries.find(s => s.idTool === tool.idTool)
       tool.searchQuery = searchQuery?.query ?? tool.nameTool
-      const previousItem = previousCounts.find(t => t.idTool === tool.idTool)
-      const parameters = [jobBoardRegion, tool, previousItem, dateId, words]
-      if (jobBoardRegion.id === 1) await wrapper(getHeadHunter, ...parameters)
-      if (jobBoardRegion.id === 2) await wrapper(getLinkedIn, ...parameters)
+      const previousObject = previousCounts.find(i => i.idTool === tool.idTool)
+      const previousCount = previousObject?.countOfItem
+      const parameters = [jobboard, tool, previousCount, dateId, emptyWords]
+      if (jobboard.id === 1) await wrapper(getHeadHunter, ...parameters)
+      if (jobboard.id === 2) await wrapper(getLinkedIn, ...parameters)
     }
   }
-
   await queries.changeStatusOfDate(dateId)
   const dateEnd = ((Date.now() - dateStart) / 60_000).toFixed(2)
   chalk.log(`Потрачено минут: ${dateEnd} (${new Date()})`)
@@ -58,24 +57,21 @@ async function wrapper(
   function_,
   jobBoardRegion,
   tool,
-  previousCounts,
+  previousCount,
   date,
   words,
   i = 0
 ) {
   if (i === config.NUMBER_OF_FAILED_ATTEMPTS) {
-    console.log(
+    console.log(`Слишком много неудачных запросов`)
+    sendNoticeToTelegram(
       `Слишком много неудачных запросов (${tool.nameTool}) (${function_.name})`
     )
-    sendNoticeToTelegram(`Слишком много неудачных запросов (${tool.nameTool})`)
-    return null
   }
   try {
-    const previousCount = previousCounts?.countOfItem ?? null
-    console.log(`${tool.searchQuery}, ${function_.name}`)
+    console.log(`${tool.searchQuery}, ${function_.name}, ${new Date()}`)
     const encodedTool = encodeURIComponent(tool.searchQuery)
-
-    const { nodeContainCount, id } = jobBoardRegion
+    const { id, nodeContainCount } = jobBoardRegion
     const url = jobBoardRegion.url.replace('<NAME_TOOL!>', encodedTool)
     const count = await function_(url, nodeContainCount, words)
 
@@ -85,6 +81,7 @@ async function wrapper(
         `Сильно отличающиеся числа (${tool.nameTool}) (c: ${count} p: ${previousCount}) (${function_.name})`
       )
     }
+
     chalk.log(`${tool.nameTool} cur: ${count} prev: ${previousCount}`)
     await queries.setCountsItem(tool.idTool, date, count, id)
     return count
@@ -94,7 +91,7 @@ async function wrapper(
       function_,
       jobBoardRegion,
       tool,
-      previousCounts,
+      previousCount,
       date,
       words,
       i + 1
@@ -102,63 +99,9 @@ async function wrapper(
   }
 }
 
-async function getHeadHunter(url, nodeContainCount, words) {
-  const resp = await fetch(url)
-  const html = await resp.text()
-
-  const indexOfStart = html.indexOf(nodeContainCount)
-  const parsedString = html.slice(indexOfStart + 45, indexOfStart + 300)
-
-  if (
-    !parsedString.includes('аканс') &&
-    !isFixedOrNotFound(parsedString, words)
-  ) {
-    throw new Error('какая то ошибка')
-  }
-  if (isFixedOrNotFound(parsedString, words)) return 0
-
-  let currentCount = ''
-  for (const char of parsedString) {
-    if (!Number.isNaN(+char) && !Number.isNaN(Number.parseFloat(char)))
-      currentCount += char
-    if (char === '<') break
-  }
-  return Number(currentCount)
-}
-
-async function getLinkedIn(url, nodeContainCount, words) {
-  await new Promise(resolve => setTimeout(resolve, 5000))
-  const agent = new HttpsProxyAgent(process.env.PROXY)
-
-  const resp = await fetch(url, { agent })
-  const data = await resp.text()
-
-  const index = data.indexOf(nodeContainCount)
-
-  if (
-    !data.includes('results-context-header__job-count') &&
-    !isFixedOrNotFound(data, words)
-  ) {
-    console.log('ни результата, ни исправления')
-    throw new Error('Ошибка при парсинге')
-  }
-  if (isFixedOrNotFound(data, words)) return 0
-
-  let res = ''
-  for (let i = index; data[i] !== ' '; i++) res += data[i]
-  return res.split('>').at(-1).trim().replaceAll(/[+,]/g, '')
-}
-
 async function createAndGetDateOfNewParsing() {
   const [lastDate] = await queries.createNewDate(getCurrentDate())
   return lastDate.iddate
-}
-
-function isFixedOrNotFound(parsedString, words) {
-  for (const string of words) {
-    if (parsedString.includes(string)) return true
-  }
-  return false
 }
 
 function isNormalCount(currentCount, previousCount) {
@@ -171,7 +114,7 @@ function isNormalCount(currentCount, previousCount) {
 export async function canParsing() {
   const now = new Date()
   if (now.getHours() === config.HOURS_OF_START_PARSING) {
-    const [lastDate] = await queries.getLastDate()
+    const [lastDate] = await queries.getLastNotTrueDate()
     return !isSameDay(new Date(lastDate.date_of_completion), now)
   }
   return false

@@ -1,5 +1,5 @@
 import queries from './sql.js'
-import ListMapping from './mapping.js'
+import ListMapping from '../../shared/mapping.js'
 
 class Services {
   async getDates() {

@@ -7,6 +7,7 @@ import routes from './config/router.js'
 import config, { isProduction } from './shared/consts.js'
 import { errorHandler } from './shared/errorHandler.js'
 import { getNumberOfVacancies, canParsing } from './components/list/index.js'
+// import { parsingJobBoards } from './components/jobboardRanked/parseJobBoards.js'
 
 dotenv.config()
 
@@ -30,4 +31,6 @@ app.listen(config.PORT, () =>
 setInterval(async () => {
   if ((await canParsing()) && isProduction) await getNumberOfVacancies()
 }, config.INTERVAL_OF_CHECK_CAN_PARSING)
+await canParsing()
 // getNumberOfVacancies() // for test
+// parsingJobBoards()
