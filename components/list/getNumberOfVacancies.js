@@ -127,6 +127,7 @@ async function getHeadHunter(url, nodeContainCount, words) {
 }
 
 async function getLinkedIn(url, nodeContainCount, words) {
+  // eslint-disable-next-line no-promise-executor-return
   await new Promise(resolve => setTimeout(resolve, 5000))
   const agent = new HttpsProxyAgent(process.env.PROXY)
 
