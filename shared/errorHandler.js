@@ -1,10 +1,11 @@
 import { sendMail } from './mail.js'
 import chalk from './chalkColors.js'
+import sc from './statusCodes.js'
 import { isProduction } from './consts.js'
 import { sendNoticeToTelegram } from '../config/telegram.js'
 
 export class CustomHTTPError extends Error {
-  constructor(message, httpStatusCode = 500) {
+  constructor(message, httpStatusCode = sc.InternalServerError) {
     super(message)
     this.name = 'CustomHTTPError'
     this.httpStatusCode = httpStatusCode
@@ -19,7 +20,7 @@ export class CustomHTTPError extends Error {
 
 export class EmptyParametersError extends CustomHTTPError {
   constructor(message) {
-    super(message, 400)
+    super(message, sc.BadRequest)
     this.name = 'EmptyParametersError'
   }
 }
@@ -32,7 +33,12 @@ export async function errorHandler(errorP, req, res, next) {
     error = new CustomHTTPError(error.message)
   }
   chalk.error(error.toString())
-  const { message, httpStatusCode = 500, timestamp, stack } = error
+  const {
+    message,
+    httpStatusCode = sc.InternalServerError,
+    timestamp,
+    stack,
+  } = error
 
   sendNoticeToTelegram(error.toString())
 

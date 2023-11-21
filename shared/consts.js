@@ -30,6 +30,10 @@ const config = {
   fixedOrNotFound: {
     HeadHunter: ['исправлен', 'не найдено'],
   },
+
+  waitingBetweenRequests: {
+    LinkedIn: 3000,
+  },
 }
 
 export default config

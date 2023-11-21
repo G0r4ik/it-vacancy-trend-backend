@@ -44,6 +44,7 @@ export async function getNumberOfVacancies() {
       tool.searchQuery = searchQuery?.query ?? tool.nameTool
       const previousItem = previousCounts.find(t => t.idTool === tool.idTool)
       const parameters = [jobBoardRegion, tool, previousItem, dateId, words]
+      // FIXME: MAGIC NUMBER OR NOT?
       if (jobBoardRegion.id === 1) await wrapper(getHeadHunter, ...parameters)
       if (jobBoardRegion.id === 2) await wrapper(getLinkedIn, ...parameters)
     }
@@ -127,8 +128,10 @@ async function getHeadHunter(url, nodeContainCount, words) {
 }
 
 async function getLinkedIn(url, nodeContainCount, words) {
-  // eslint-disable-next-line no-promise-executor-return
-  await new Promise(resolve => setTimeout(resolve, 5000))
+  await new Promise(resolve =>
+    // eslint-disable-next-line no-promise-executor-return
+    setTimeout(resolve, config.waitingBetweenRequests.LinkedIn)
+  )
   const agent = new HttpsProxyAgent(process.env.PROXY)
 
   const resp = await fetch(url, { agent })
