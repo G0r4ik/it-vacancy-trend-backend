@@ -57,8 +57,8 @@ class Services {
       // FIXME
       tool.counts = {}
       tool.diff = {}
-      tool.is_controversial_word = false
-      tool.search_query = 'test'
+      // tool.is_controversial_word = false
+      // tool.search_query = 'test'
 
       for (const event of events) {
         if (event.idTool === tool.idTool) tool.events.push(event)

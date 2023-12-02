@@ -40,9 +40,8 @@ export async function errorHandler(errorP, req, res, next) {
     stack,
   } = error
 
-  sendNoticeToTelegram(error.toString())
-
   if (isProduction) {
+    sendNoticeToTelegram(error.toString())
     sendMail({
       subject: 'Обработана ошибка',
       text: `${error}, ${timestamp}\n${stack}`,
