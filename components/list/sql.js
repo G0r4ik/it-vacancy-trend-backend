@@ -13,7 +13,7 @@ class Queries {
   getTools() {
     return pQuery(`
       SELECT id_tool, name_tool
-      FROM tools ORDER BY id_tool;
+      FROM tools ORDER BY name_tool;
     `)
   }
 
