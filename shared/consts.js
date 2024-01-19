@@ -5,15 +5,12 @@ dotenv.config()
 export const isProduction = process.env.NODE_ENV === 'production'
 
 const clientURL = process.env.CLIENT_ADDRESS
-const serverURL = process.env.SERVER_ADDRESS
 const serverPort = process.env.LOCAL_SERVER_PORT
 const clientPort = process.env.LOCAL_WEBPACK_PORT
 
 const config = {
   CLIENT_ADDRESS_LOCAL: `http://localhost:${clientPort}`,
-  SERVER_ADDRESS_LOCAL: `http://localhost:${serverPort}`,
   CLIENT_ADDRESS: isProduction ? clientURL : `http://localhost:${clientPort}`,
-  SERVER_ADDRESS: isProduction ? serverURL : `http://localhost:${serverPort}`,
   CLIENT_ADDRESS_TEST: process.env.CLIENT_ADDRESS_TEST,
 
   PORT: process.env.PORT || serverPort,
